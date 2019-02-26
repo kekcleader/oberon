@@ -1,10 +1,7 @@
 MODULE Test;
-IMPORT In, Out;
-VAR a, b: INTEGER;
 BEGIN
 	a := 322;
-	b := 15;
-	
-	Out.Int(a, 29);
-	Out.Ln;
+	b := 15;;
+	b := 16;
+	b := 17;
 END Test.

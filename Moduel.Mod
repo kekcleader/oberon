@@ -15,6 +15,7 @@ VAR f: Files.File;
     id: ARRAY 32 OF CHAR;
     idlen: INTEGER;
     ival: INTEGER;
+    error: BOOLEAN;
     
 PROCEDURE ReadCh;
 BEGIN
@@ -89,6 +90,67 @@ BEGIN
   END
 END Get;
 
+PROCEDURE Mark(msg: ARRAY OF CHAR);
+BEGIN
+  error := TRUE;
+
+  Out.String("Ошибка на поз. ");
+  Out.Int(SHORT(Files.Pos(r)), 0);
+  Out.String(": "); Out.String(msg);
+  Out.Char("."); Out.Ln
+END Mark;
+
+PROCEDURE Declarations;
+BEGIN
+  (*Пусто*)
+END Declarations;
+
+PROCEDURE StatSeq;
+VAR name: ARRAY 32 OF CHAR;
+BEGIN
+  WHILE (sym = ident) OR (sym = semicol) DO
+    IF sym = ident THEN name := id; Get;
+      IF sym = equ THEN Get; sym := becomes; Mark("Ожидается :=") END;
+      IF sym = becomes THEN Get;
+        IF sym = int THEN
+          Out.String("Переменной "); Out.String(name);
+          Out.String(" присвоено значение "); Out.Int(ival, 0); Out.Ln;
+          Get
+        ELSE Get;
+          Mark("Можно присваивать только числа")
+        END
+      END
+    ELSE Get
+    END
+  END
+END StatSeq;
+
+PROCEDURE Module;
+VAR name: ARRAY 32 OF CHAR;
+BEGIN
+  IF sym = module THEN
+    Get;
+    IF sym = ident THEN name := id; Get
+    ELSE Mark("Ожидается идентификатор"); name[0] := 0X
+    END;
+    IF sym = semicol THEN Get
+    ELSE Mark("Ожидается точка с запятой")
+    END;
+    Declarations;
+    IF sym = begin THEN Get; StatSeq END;
+    IF sym = end THEN
+      Get;
+      IF sym = ident THEN
+        IF name # id THEN Mark("Название модуля не совпадает") END;
+        Get;
+        IF sym # period THEN Mark("Нет точки в конце модуля") END
+      END
+    ELSE Mark("Ожидается END")
+    END
+  ELSE Mark("Ожидается модуль")
+  END
+END Module;
+
 BEGIN
   f := Files.Old("Test.Mod");
   IF f = NIL THEN
@@ -98,12 +160,8 @@ BEGIN
     Files.Set(r, f, 0);
     ReadCh;
     Get;
-    WHILE sym # eot DO
-      Out.Int(sym, 4);
-      IF sym = int THEN Out.Char("("); Out.Int(ival, 0); Out.Char(")") END;
-      Get
-    END
-  END;
-
-  Out.Ln
+    error := FALSE;
+    Module;
+    IF error THEN Out.String("Были ошибки."); Out.Ln END
+  END
 END Moduel.
