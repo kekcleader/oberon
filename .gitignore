@@ -1,0 +1,9 @@
+*.c
+*.h
+*.o
+*.sym
+Moduel
+.*.tmp
+*.swp
+*.bak
+*.BAK
