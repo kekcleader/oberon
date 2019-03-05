@@ -2,7 +2,7 @@
 *.h
 *.o
 *.sym
-Moduel
+Compiler
 .*.tmp
 *.swp
 *.bak
