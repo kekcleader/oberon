@@ -119,6 +119,7 @@ BEGIN
         ELSE Get;
           Mark("Можно присваивать только числа")
         END
+      ELSE Mark("Ожидается :=")
       END
     ELSE Get
     END
