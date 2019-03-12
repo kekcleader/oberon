@@ -4,18 +4,20 @@ VAR sym: INTEGER;
 
 PROCEDURE Declarations;
 BEGIN
-  (* Здесь будет обработка CONST, TYPE, VAR и объявления процедур *)
+  (* Здесь будет обработка CONST, TYPE, VAR и объявлений процедур *)
 END Declarations;
 
 (* Операторы = Оператор {";" Оператор}.
 Оператор = Присваивание | ВызовПроцедуры | ОператорIf |
               ОператорCase | ОператорWhile | ОператорRepeat |
-              ОператорFor.
+              ОператорFor | "".
 "Statements"/"Операторы" означает последовательность операторов. *)
+
 PROCEDURE Statements;
 VAR name: ARRAY 32 OF CHAR;
 BEGIN
-  WHILE (sym = S.ident) OR (sym = S.semicol) DO
+  REPEAT
+    IF sym = S.semicol THEN S.Get(sym) END;
     IF sym = S.ident THEN name := S.id; S.Get(sym);
       IF sym = S.equ THEN S.Get(sym); sym := S.becomes; S.Mark("Ожидается :=") END;
       IF sym = S.becomes THEN S.Get(sym);
@@ -28,9 +30,8 @@ BEGIN
         END
       ELSE S.Mark("Ожидается :=")
       END
-    ELSE S.Get(sym)
     END
-  END
+  UNTIL sym # S.semicol
 END Statements;
 
 (* Модуль = MODULE идент ";" Объявления [BEGIN Операторы] END идент ".". *)
