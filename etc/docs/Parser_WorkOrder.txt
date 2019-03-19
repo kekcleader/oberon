@@ -1,0 +1,58 @@
+MODULE Z;
+VAR x: INTEGER;
+BEGIN
+	a := 4;
+	b := a;
+	Out.Ln;
+	Out.Int(b, 5)
+END Z.
+
+Лексич. анализатор:  (scanner)
+	ReadCh
+	Get
+
+Кодогенератор:
+	Процедуры генерации машинного кода
+
+Символьная таблица:
+	NewObj
+	ThisObj
+
+Синтаксич. анализатор: (parser)
+Module
+	Imports	
+	Declarations
+	StatSeq
+		Qualident
+			Ident
+			Selector
+		Assignment
+			Expression
+				SimpleExpr
+					Term
+						Factor
+			Generator.Assign(x, y)
+
+		Qualident
+			Ident
+			Selector
+		Assignment
+			Expression
+				SimpleExpr
+					Term
+						Factor
+							Qualident
+								Ident
+									Selector
+
+			Generator.Assign(x, y)
+
+
+StatSeq = Statement {";" Statement}.
+
+Statement = IfStatement | WhileStatement | Assignment | ProcedureCall.
+
+
+Scanner.Mod -> Scanner.o Scanner.sym
+Parser.Mod -> Parser.o Parser.sym
+
