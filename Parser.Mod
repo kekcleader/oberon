@@ -2,6 +2,11 @@ MODULE Parser;
 IMPORT Out, Files, S := Scanner;
 VAR sym: INTEGER;
 
+PROCEDURE Import;
+BEGIN
+  (* Здесь будет обработка IMPORT *)
+END Import;
+
 PROCEDURE Declarations;
 BEGIN
   (* Здесь будет обработка CONST, TYPE, VAR и объявлений процедур *)
@@ -46,6 +51,7 @@ BEGIN
     IF sym = S.semicol THEN S.Get(sym)
     ELSE S.Mark("Ожидается точка с запятой")
     END;
+    Import;
     Declarations;
     IF sym = S.begin THEN S.Get(sym); Statements END;
     IF sym = S.end THEN
