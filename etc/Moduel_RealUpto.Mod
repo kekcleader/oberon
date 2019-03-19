@@ -102,8 +102,7 @@ BEGIN
         ch := 7FX
       ELSE sym := null
       END
-    END;
-    sym := int
+    END
   ELSIF ch = 7FX THEN sym := upto; ReadCh
   ELSE
     sym := null;
