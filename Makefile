@@ -9,17 +9,25 @@ all: $(PROG)
 
 $(PROG): $(PROG).sym
 	$(CC) -fPIC -g -I $(VOCPATH)/C/include \
-		-o $(PROG) Parser.o Scanner.o $(PROG).o \
+		-o $(PROG) Parser.o Scanner.o \
+		SymTable.o Generator.o \
+		$(PROG).o \
 		$(VOCPATH)/lib/libvoc-OC.a
 
 $(PROG).sym: $(PROG).Mod Parser.sym
 	$(COMPILE) -m $(PROG).Mod
 
-Parser.sym: Parser.Mod Scanner.sym
+Parser.sym: Parser.Mod Scanner.sym SymTable.sym Generator.sym
 	$(COMPILE) Parser.Mod
 
 Scanner.sym: Scanner.Mod
 	$(COMPILE) Scanner.Mod
+
+Generator.sym: Generator.Mod SymTable.sym
+	$(COMPILE) Generator.Mod
+
+SymTable.sym: SymTable.Mod
+	$(COMPILE) SymTable.Mod
 
 .PHONY: run clean
 
