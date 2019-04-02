@@ -1,11 +1,26 @@
 MODULE Parser;
-IMPORT Out, Files, S := Scanner, Gen := Generator;
+IMPORT Out, Files, S := Scanner, ST := SymTable, Gen := Generator;
 VAR sym: INTEGER;
 
 PROCEDURE Import;
 BEGIN
   (* Здесь будет обработка IMPORT *)
 END Import;
+
+PROCEDURE Type(VAR x: Gen.Item);
+BEGIN
+  IF sym = S.ident THEN
+    IF S.id = "INTEGER" THEN
+      S.Get(sym);
+      x.mode := ST.Typ;
+      x.type := NIL
+    ELSE
+      S.Mark("Ожидается INTEGER")
+    END
+  ELSE
+    S.Mark("Ожидается тип")
+  END
+END Type;
 
 (* Объявления = [CONST {ОбъявлениеКонстант ";"}]
 		[TYPE {ОбъявлениеТипов ";"}]
@@ -19,17 +34,49 @@ END Import;
 ОбъявлениеПеременных = Идентификаторы ":" Тип.
 Идентификаторы = Идентификатор {"," Идентификатор}.
 Тип = Идентификатор. *)
+
 PROCEDURE Declarations;
 VAR x: Gen.Item;
+    i, n: INTEGER;
+    o: ST.Object;
+    names: ARRAY 30, 32 OF CHAR;
 BEGIN
-  (* Псевдокод: *)
-  (* 1. Если считано слово VAR, то: *)
-  (* 2. Считать список идентификаторов и записать его в массив *)
-  (* 3. Считать двоеточие *)
-  (* 4. Считать тип *)
-  (*Type(x);*)
-  (* 5. Считать точку с запятой *)
-  (* 6. Если считан идентификатор, перейти к пункту 2 *)
+  IF sym = S.var THEN (* 1. Если считано слово VAR, то: *)
+    S.Get(sym); (* Переходим к названию первой переменной *)
+    WHILE sym = S.ident DO
+      names[0] := S.id;
+      S.Get(sym); (* Переходим к запятой или к двоеточию *)
+      n := 1;
+      WHILE sym = S.comma DO
+        S.Get(sym); (* Переходим к названию следующей перменной *)
+        IF sym = S.ident THEN
+          IF n < LEN(names) THEN
+            names[n] := S.id;
+            INC(n)
+          ELSE
+            S.Mark("Слишком много переменных")
+          END
+        ELSE
+          S.Mark("Ожидается идентификатор")
+        END;
+        S.Get(sym) (* Переходим к запятой или к двоеточию *)
+      END;
+      IF sym = S.colon THEN
+        S.Get(sym);
+        Type(x);
+        FOR i := 0 TO n - 1 DO
+          o := ST.NewObj(names[i], ST.Var)
+        END;
+        IF sym = S.semicol THEN
+          S.Get(sym)
+        ELSE
+          S.Mark("Ожидается точка с запятой")
+        END
+      ELSE
+        S.Mark("Ожидается двоеточие")
+      END
+    END
+  END
 END Declarations;
 
 (* Операторы = Оператор {";" Оператор}.
@@ -78,9 +125,11 @@ BEGIN
       S.Get(sym);
       IF sym = S.ident THEN
         IF name # S.id THEN S.Mark("Название модуля не совпадает") END;
-        S.Get(sym);
-        IF sym # S.period THEN S.Mark("Нет точки в конце модуля") END
-      END
+        S.Get(sym)
+      ELSE
+        S.Mark("Ожидается название модуля")
+      END;
+      IF sym # S.period THEN S.Mark("Нет точки в конце модуля") END
     ELSE S.Mark("Ожидается END")
     END
   ELSE S.Mark("Ожидается модуль")
@@ -95,6 +144,7 @@ PROCEDURE Compile*(): BOOLEAN;
 BEGIN
   S.Get(sym); (* Получить наперёд одну лексему *)
   Module; (* Запустить разбор синтаксической структуры МОДУЛЬ *)
+  ST.Display;
   RETURN ~S.error
 END Compile;
 
