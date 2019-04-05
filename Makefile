@@ -43,4 +43,4 @@ run: $(PROG)
 	@nl Test.Mod; ./$(PROG)
 
 clean:
-	@rm -f *.c *.h *.o *.sym .tmp..* $(PROG)
+	@rm -f *.c *.h *.o *.sym .tmp..* chmod/*.o $(PROG)
