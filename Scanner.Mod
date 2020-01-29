@@ -14,7 +14,19 @@ VAR r: Files.Rider;
     id*: ARRAY 32 OF CHAR;
     idlen*: INTEGER;
     ival*: INTEGER;
+    sval*: ARRAY 1024 OF CHAR;
+    slen*: INTEGER;
     error*: BOOLEAN;
+
+PROCEDURE Mark*(msg: ARRAY OF CHAR);
+BEGIN
+  error := TRUE;
+
+  Out.String("Ошибка на поз. ");
+  Out.Int(SHORT(Files.Pos(r)), 0);
+  Out.String(": "); Out.String(msg);
+  Out.Char("."); Out.Ln
+END Mark;
 
 PROCEDURE ReadCh;
 BEGIN
@@ -35,6 +47,8 @@ BEGIN
   ELSIF ch = ";" THEN sym := semicol; ReadCh
   ELSIF ch = "+" THEN sym := plus; ReadCh
   ELSIF ch = "-" THEN sym := minus; ReadCh
+  ELSIF ch = "*" THEN sym := times; ReadCh
+  ELSIF ch = "/" THEN sym := rdiv; ReadCh
   ELSIF ch = "&" THEN sym := and; ReadCh
   ELSIF ch = "~" THEN sym := not; ReadCh
   ELSIF ch = "(" THEN sym := lparen; ReadCh
@@ -43,6 +57,16 @@ BEGIN
   ELSIF ch = "]" THEN sym := rbrak; ReadCh
   ELSIF ch = "{" THEN sym := lbrace; ReadCh
   ELSIF ch = "}" THEN sym := rbrace; ReadCh
+  ELSIF ch = "=" THEN sym := equ; ReadCh
+  ELSIF ch = "#" THEN sym := neq; ReadCh
+  ELSIF ch = "<" THEN ReadCh;
+	IF ch = "=" THEN sym := leq; ReadCh
+	ELSE sym := les
+	END
+  ELSIF ch = ">" THEN ReadCh;
+	IF ch = "=" THEN sym := geq; ReadCh
+	ELSE sym := gtr
+	END
   ELSIF ch = ":" THEN
     ReadCh;
     IF ch = "=" THEN sym := becomes; ReadCh
@@ -82,22 +106,24 @@ BEGIN
       ival := ival * 10 + ORD(ch) - ORD("0");
       ReadCh
     END;
-    sym := int;
+    sym := int  
+  ELSIF ch = 22X THEN ReadCh; sym := string;
+	slen := 0;
+	WHILE (ch # 22X) & (ch # 0X) & (slen < LEN(sval) - 1) DO
+	  sval[slen] := ch;
+	  INC(slen);
+	  ReadCh
+	END;
+	IF ch = 0X THEN Mark("Неожиданный конец файла")
+	ELSIF ch # 22X THEN Mark("Слишком длинная строка")
+	END;
+	sval[slen] := 0X;
+	ReadCh
   ELSE
     sym := null;
     ReadCh
   END
 END Get;
-
-PROCEDURE Mark*(msg: ARRAY OF CHAR);
-BEGIN
-  error := TRUE;
-
-  Out.String("Ошибка на поз. ");
-  Out.Int(SHORT(Files.Pos(r)), 0);
-  Out.String(": "); Out.String(msg);
-  Out.Char("."); Out.Ln
-END Mark;
 
 PROCEDURE Init*(F: Files.File);
 BEGIN

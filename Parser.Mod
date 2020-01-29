@@ -23,9 +23,9 @@ BEGIN
 END Type;
 
 (* Объявления = [CONST {ОбъявлениеКонстант ";"}]
-		[TYPE {ОбъявлениеТипов ";"}]
-		[VAR {ОбъявлениеПеременных ";"}]
-		{ОбъявлениеПроцедуры ";"}.
+    [TYPE {ОбъявлениеТипов ";"}]
+    [VAR {ОбъявлениеПеременных ";"}]
+    {ОбъявлениеПроцедуры ";"}.
 ОбъявлениеПеременных = Идентификаторы ":" Тип.
 Идентификаторы = Идентификатор {"," Идентификатор}.
 Тип = уточнИдент | ТипМассив | ТипЗапись | ТипУказатель | ПроцедурныйТип.
@@ -89,14 +89,19 @@ PROCEDURE Statements;
 VAR name: ARRAY 32 OF CHAR;
 BEGIN
   REPEAT
-    IF sym = S.semicol THEN S.Get(sym) END;
+    WHILE sym = S.semicol DO S.Get(sym) END;
     IF sym = S.ident THEN name := S.id; S.Get(sym);
-      IF sym = S.equ THEN S.Get(sym); sym := S.becomes; S.Mark("Ожидается :=") END;
+      IF sym = S.equ THEN sym := S.becomes; S.Mark("Ожидается :=") END;
       IF sym = S.becomes THEN S.Get(sym);
         IF sym = S.int THEN
           Out.String("Переменной "); Out.String(name);
           Out.String(" присвоено значение "); Out.Int(S.ival, 0); Out.Ln;
           S.Get(sym)
+        ELSIF sym = S.string THEN
+          Out.String("Переменной "); Out.String(name);
+          Out.String(" присвоена строка '");
+          Out.String(S.sval); Out.String("' (длина: ");
+          Out.Int(S.slen , 0); Out.String(")."); Out.Ln
         ELSE S.Get(sym);
           S.Mark("Можно присваивать только числа")
         END

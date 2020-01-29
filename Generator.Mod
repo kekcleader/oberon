@@ -3,8 +3,8 @@ IMPORT ST := SymTable, Out, Files, Chmod;
 CONST fname = "Test";
 TYPE
   Item* = RECORD
-		mode*: INTEGER; (* Режим предмета, используются константы из SymTable *)
-		type*: ST.Type
+    mode*: INTEGER; (* Режим предмета, используются константы из SymTable *)
+    type*: ST.Type
   END;
 VAR
   F: Files.File;
