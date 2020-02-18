@@ -1,9 +1,8 @@
 MODULE Test;
 VAR a, b: INTEGER;
-  c: INTEGER;
+  c, d, n: INTEGER;
 BEGIN
   a := 322;
-  b := "HELLO";
-  c := 16;
-  d := 20
+  b := "Hello";
+  n := a + (b + c)
 END Test.

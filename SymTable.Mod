@@ -3,7 +3,7 @@ IMPORT Out, S := Scanner;
 CONST
   (* Классы объектов (и, одновременно, режимы предметов) *)
   Head* = 0; Var* = 2; Typ* = 5;
-  
+
   (* Формы типов *)
   Int* = 4;
 
@@ -12,7 +12,7 @@ TYPE
   TypeDesc* = RECORD
     form*: INTEGER (* Форма типа *)
   END;
-  
+
   Object* = POINTER TO ObjDesc;
   ObjDesc* = RECORD
     class*: INTEGER; (* Класс объекта *)

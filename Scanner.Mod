@@ -60,13 +60,13 @@ BEGIN
   ELSIF ch = "=" THEN sym := equ; ReadCh
   ELSIF ch = "#" THEN sym := neq; ReadCh
   ELSIF ch = "<" THEN ReadCh;
-	IF ch = "=" THEN sym := leq; ReadCh
-	ELSE sym := les
-	END
+    IF ch = "=" THEN sym := leq; ReadCh
+    ELSE sym := les
+    END
   ELSIF ch = ">" THEN ReadCh;
-	IF ch = "=" THEN sym := geq; ReadCh
-	ELSE sym := gtr
-	END
+    IF ch = "=" THEN sym := geq; ReadCh
+    ELSE sym := gtr
+    END
   ELSIF ch = ":" THEN
     ReadCh;
     IF ch = "=" THEN sym := becomes; ReadCh
@@ -108,17 +108,20 @@ BEGIN
     END;
     sym := int  
   ELSIF ch = 22X THEN ReadCh; sym := string;
-	slen := 0;
-	WHILE (ch # 22X) & (ch # 0X) & (slen < LEN(sval) - 1) DO
-	  sval[slen] := ch;
-	  INC(slen);
-	  ReadCh
-	END;
-	IF ch = 0X THEN Mark("Неожиданный конец файла")
-	ELSIF ch # 22X THEN Mark("Слишком длинная строка")
-	END;
-	sval[slen] := 0X;
-	ReadCh
+    slen := 0;
+    WHILE (ch # 22X) & (ch >= " ") & (slen < LEN(sval) - 1) DO
+      sval[slen] := ch;
+      INC(slen);
+      ReadCh
+    END;
+    IF ch = 0X THEN Mark("Неожиданный конец файла")
+    ELSIF ch < " " THEN Mark("Недопустимая литера в строке")
+    ELSIF ch # 22X THEN Mark("Слишком длинная строка")
+      END;
+    sval[slen] := 0X;
+      (*Промотка до ближайшей кавычки*)
+    WHILE (ch # 0X) & (ch # 22X) DO ReadCh END;
+    ReadCh
   ELSE
     sym := null;
     ReadCh

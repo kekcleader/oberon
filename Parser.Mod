@@ -2,6 +2,8 @@ MODULE Parser;
 IMPORT Out, Files, S := Scanner, ST := SymTable, Gen := Generator;
 VAR sym: INTEGER;
 
+PROCEDURE ^Expression;
+
 PROCEDURE Import;
 BEGIN
   (* Здесь будет обработка IMPORT *)
@@ -81,9 +83,78 @@ END Declarations;
 
 (* Операторы = Оператор {";" Оператор}.
 Оператор = Присваивание | ВызовПроцедуры | ОператорIf |
-              ОператорCase | ОператорWhile | ОператорRepeat |
-              ОператорFor | "".
-"Statements"/"Операторы" означает последовательность операторов. *)
+           ОператорCase | ОператорWhile | ОператорRepeat |
+            ОператорFor | "".
+Statements/Операторы означает последовательность операторов. *)
+
+(*УПРОЩЕНО: factor = number | ident | "(" expression ")".*)
+PROCEDURE Factor;
+BEGIN
+  S.Get(sym);
+END Factor;
+
+(*term = factor {MulOperator factor}.*)
+PROCEDURE Term;
+VAR op: INTEGER;
+BEGIN
+  Factor;
+  WHILE (sym = S.times) OR (sym = S.div) OR (sym = S.mod) DO
+    op := sym;
+    S.Get(sym);
+    Factor;
+    IF op = S.times THEN
+      Out.String("умножение")
+    ELSIF op = S.div THEN
+      Out.String("деление")
+    ELSE
+      Out.String("остаток от деления")
+    END;
+    Out.Ln
+  END
+END Term;
+
+(*SimpleExpression = ["+"|"-"] term {AddOperator term}.*)
+PROCEDURE SimpleExpression;
+VAR minus: BOOLEAN;
+  op: INTEGER;
+BEGIN
+  minus := FALSE;
+  IF sym = S.plus THEN
+    S.Get(sym)
+  ELSIF sym = S.minus THEN
+    minus := TRUE;
+    S.Get(sym)
+  END;
+  Term;
+  WHILE (sym = S.plus) OR (sym = S.minus) DO
+    op := sym;
+    S.Get(sym);
+    Term;
+    IF op = S.plus THEN
+      Out.String("плюс")
+    ELSE
+      Out.String("минус")
+    END;
+    Out.Ln
+  END;
+  IF minus THEN
+    Out.String("Унарный минус."); Out.Ln
+  END
+END SimpleExpression;
+
+(*expression = SimpleExpression [relation SimpleExpression].*)
+PROCEDURE Expression;
+BEGIN
+  SimpleExpression
+END Expression;
+
+PROCEDURE Assignment(name: ARRAY OF CHAR);
+BEGIN
+  S.Get(sym); (*пропускаем :=*)
+  Expression;
+  Out.String("Переменной "); Out.String(name);
+  Out.String(" присвоено указанное значение."); Out.Ln
+END Assignment;
 
 PROCEDURE Statements;
 VAR name: ARRAY 32 OF CHAR;
@@ -92,19 +163,7 @@ BEGIN
     WHILE sym = S.semicol DO S.Get(sym) END;
     IF sym = S.ident THEN name := S.id; S.Get(sym);
       IF sym = S.equ THEN sym := S.becomes; S.Mark("Ожидается :=") END;
-      IF sym = S.becomes THEN S.Get(sym);
-        IF sym = S.int THEN
-          Out.String("Переменной "); Out.String(name);
-          Out.String(" присвоено значение "); Out.Int(S.ival, 0); Out.Ln;
-          S.Get(sym)
-        ELSIF sym = S.string THEN
-          Out.String("Переменной "); Out.String(name);
-          Out.String(" присвоена строка '");
-          Out.String(S.sval); Out.String("' (длина: ");
-          Out.Int(S.slen , 0); Out.String(")."); Out.Ln
-        ELSE S.Get(sym);
-          S.Mark("Можно присваивать только числа")
-        END
+      IF sym = S.becomes THEN Assignment(name)
       ELSE S.Mark("Ожидается :=")
       END
     END
