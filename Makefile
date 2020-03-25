@@ -40,7 +40,7 @@ chmod/chmod.o: chmod/chmod.c chmod/chmod.h
 .PHONY: run clean
 
 run: $(PROG)
-	@nl Test.Mod; ./$(PROG)
+	@clear; nl Test.Mod; ./$(PROG)
 
 clean:
 	@rm -f *.c *.h *.o *.sym .tmp..* chmod/*.o $(PROG)

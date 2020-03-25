@@ -1,8 +1,5 @@
 MODULE Test;
-VAR a, b: INTEGER;
-  c, d, n: INTEGER;
+VAR a, b, c, n: INTEGER;
 BEGIN
-  a := 322;
-  b := "Hello";
-  n := a + (b + c)
+  n := a * b DIV (b + c) - 34
 END Test.

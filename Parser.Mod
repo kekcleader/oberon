@@ -90,7 +90,24 @@ Statements/Операторы означает последовательнос�
 (*УПРОЩЕНО: factor = number | ident | "(" expression ")".*)
 PROCEDURE Factor;
 BEGIN
-  S.Get(sym);
+  IF sym = S.int THEN
+    Out.String("Прочитано число ");
+    Out.Int(S.ival, 0); Out.Ln;
+    S.Get(sym)
+  ELSIF sym = S.ident THEN
+    Out.String("Прочитан идентификатор '");
+    Out.String(S.id);
+    Out.Char("'"); Out.Ln;
+    S.Get(sym)
+  ELSIF sym = S.lparen THEN
+    S.Get(sym);
+    Expression;
+    IF sym = S.rparen THEN S.Get(sym)
+    ELSE S.Mark("Ожидается )")
+    END
+  ELSE
+    S.Mark("Ожидается число, идентификатор или (")
+  END
 END Factor;
 
 (*term = factor {MulOperator factor}.*)
@@ -126,6 +143,9 @@ BEGIN
     S.Get(sym)
   END;
   Term;
+  IF minus THEN
+    Out.String("Унарный минус."); Out.Ln
+  END;
   WHILE (sym = S.plus) OR (sym = S.minus) DO
     op := sym;
     S.Get(sym);
@@ -136,9 +156,6 @@ BEGIN
       Out.String("минус")
     END;
     Out.Ln
-  END;
-  IF minus THEN
-    Out.String("Унарный минус."); Out.Ln
   END
 END SimpleExpression;
 
