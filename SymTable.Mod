@@ -23,6 +23,14 @@ TYPE
 VAR
   curScope: Object;
 
+(*Для удобочитаемой отладки*)
+PROCEDURE OutType*(t: Type);
+BEGIN
+  IF t.form = Int THEN Out.String("целое число")
+  ELSE Out.Int(t.form, 0)
+  END
+END OutType;
+
 PROCEDURE MakeType(form: INTEGER): Type;
 VAR t: Type;
 BEGIN
@@ -49,15 +57,34 @@ BEGIN
   RETURN o
 END NewObj;
 
+(*Предусловие: sym = S.ident*)
+PROCEDURE ThisObj*(): Object;
+VAR o, p: Object;
+BEGIN
+  p := curScope;
+  WHILE p # NIL DO
+    o := p.next;
+    WHILE (o # NIL) & (o.name # S.id) DO
+      o := o.next
+    END;
+    IF o = NIL THEN p := p.dsc
+    ELSE p := NIL
+    END
+  END;
+  RETURN o
+END ThisObj;
+
 PROCEDURE Init*;
 VAR in: Object;
 BEGIN
   NEW(curScope);
   curScope.class := Head;
+  curScope.name[0] := 0X;
   curScope.next := NIL;
 
   NEW(curScope.dsc);
   curScope.dsc.class := Head;
+  curScope.dsc.name[0] := 0X;
   curScope.dsc.dsc := NIL;
 
   NEW(in);
@@ -78,8 +105,11 @@ BEGIN
     p := h.next;
     WHILE p # NIL DO
       Out.String(p.name);
-      Out.String(": class ");
-      Out.Int(p.class, 0);
+      Out.String(": ");
+      IF p.class = Head THEN Out.String("заголовочный")
+      ELSIF p.class = Var THEN Out.String("переменная")
+      ELSIF p.class = Typ THEN Out.String("тип")
+      END;
       Out.Ln;
       p := p.next
     END;

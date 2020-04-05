@@ -10,16 +10,20 @@ BEGIN
 END Import;
 
 PROCEDURE Type(VAR x: Gen.Item);
+VAR o: ST.Object;
 BEGIN
   IF sym = S.ident THEN
-    IF S.id = "INTEGER" THEN
+    o := ST.ThisObj();
+    IF o # NIL THEN
       S.Get(sym);
-      x.mode := ST.Typ;
-      x.type := NIL
-    ELSE
-      S.Mark("Ожидается INTEGER")
+      IF o.class = ST.Typ THEN
+        x.mode := ST.Typ;
+        x.type := o.type
+      ELSE
+        S.Mark("Это не тип")
+      END
     END
-  ELSE
+  ELSE (*!TODO учесть ARRAY, RECORD и др.*)
     S.Mark("Ожидается тип")
   END
 END Type;
@@ -67,7 +71,10 @@ BEGIN
         S.Get(sym);
         Type(x);
         FOR i := 0 TO n - 1 DO
-          o := ST.NewObj(names[i], ST.Var)
+          o := ST.NewObj(names[i], ST.Var);
+          o.type := x.type;
+          Out.String("Объявлена переменная "); Out.String(names[i]);
+          Out.String(" типа "); ST.OutType(o.type); Out.Ln
         END;
         IF sym = S.semicol THEN
           S.Get(sym)
@@ -165,6 +172,7 @@ BEGIN
   SimpleExpression
 END Expression;
 
+(* assignment = ident ":=" expression. *)
 PROCEDURE Assignment(name: ARRAY OF CHAR);
 BEGIN
   S.Get(sym); (*пропускаем :=*)
@@ -181,7 +189,7 @@ BEGIN
     IF sym = S.ident THEN name := S.id; S.Get(sym);
       IF sym = S.equ THEN sym := S.becomes; S.Mark("Ожидается :=") END;
       IF sym = S.becomes THEN Assignment(name)
-      ELSE S.Mark("Ожидается :=")
+      ELSE S.Mark("Ожидается :=") (*!TODO обработать вызов процедуры*)
       END
     END
   UNTIL sym # S.semicol
