@@ -3,6 +3,7 @@ PROG=Compiler
 VOC=/opt/voc/bin/voc
 CC=gcc
 VOCPATH=/opt/voc
+VOCLIBS=$(VOCPATH)/lib/libvoc-OC.a
 COMPILE=$(VOC) -OC -cesF
 
 all: $(PROG)
@@ -12,30 +13,31 @@ $(PROG): $(PROG).sym
 		-o $(PROG) Parser.o Scanner.o \
 		SymTable.o Generator.o \
 		Chmod.o \
-		chmod/chmod.o \
+		c_chmod.o \
 		$(PROG).o \
-		$(VOCPATH)/lib/libvoc-OC.a
+    $(VOCLIBS)
 
-$(PROG).sym: $(PROG).Mod Parser.sym
-	$(COMPILE) -m $(PROG).Mod
+$(PROG).sym: Mod/$(PROG).Mod Parser.sym
+	$(COMPILE) -m Mod/$(PROG).Mod
 
-Parser.sym: Parser.Mod Scanner.sym SymTable.sym Generator.sym
-	$(COMPILE) Parser.Mod
+Parser.sym: Mod/Parser.Mod Scanner.sym SymTable.sym Generator.sym
+	$(COMPILE) Mod/Parser.Mod
 
-Scanner.sym: Scanner.Mod
-	$(COMPILE) Scanner.Mod
+Scanner.sym: Mod/Scanner.Mod
+	$(COMPILE) Mod/Scanner.Mod
 
-Generator.sym: Generator.Mod SymTable.sym Chmod.sym
-	$(COMPILE) Generator.Mod
+Generator.sym: Mod/Generator.Mod SymTable.sym Chmod.sym
+	$(COMPILE) Mod/Generator.Mod
 
-SymTable.sym: SymTable.Mod
-	$(COMPILE) SymTable.Mod
+SymTable.sym: Mod/SymTable.Mod
+	$(COMPILE) Mod/SymTable.Mod
 
-Chmod.sym: Chmod.Mod chmod/chmod.o
-	$(VOC) -OC -fF Chmod.Mod
+Chmod.sym: Mod/Chmod.Mod c_chmod.o
+	$(VOC) -OC -fF Mod/Chmod.Mod
 
-chmod/chmod.o: chmod/chmod.c chmod/chmod.h
-	$(CC) -c chmod/chmod.c -o chmod/chmod.o
+c_chmod.o: Mod/c_chmod/c_chmod.c Mod/c_chmod/c_chmod.h
+	$(CC) -c Mod/c_chmod/c_chmod.c -o c_chmod.o
+	cp Mod/c_chmod/c_chmod.h .
 
 .PHONY: run clean
 
@@ -43,4 +45,4 @@ run: $(PROG)
 	@clear; nl Test.Mod; ./$(PROG)
 
 clean:
-	@rm -f *.c *.h *.o *.sym .tmp..* chmod/*.o $(PROG)
+	@rm -f *.c *.h *.o *.sym .tmp..* Test $(PROG)

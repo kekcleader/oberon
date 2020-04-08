@@ -2,9 +2,9 @@
 /*.h
 *.o
 *.sym
-Compiler
 .*.tmp
 *.swp
 *.bak
 *.BAK
+Compiler
 Test

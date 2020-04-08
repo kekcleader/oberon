@@ -1,7 +1,7 @@
 MODULE Chmod;
 IMPORT SYSTEM;
 
-PROCEDURE -AAIncludeChmodh* '#include "chmod/chmod.h"';
+PROCEDURE -AAIncludeChmodh* '#include "c_chmod.h"';
 
 PROCEDURE -MakeExecutable*
   (path: ARRAY OF CHAR): INTEGER
