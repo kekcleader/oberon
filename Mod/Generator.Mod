@@ -98,7 +98,7 @@ BEGIN
 
   Byte(0CDH); (* Прерывание: INT *)
   Byte(080H); (* Номер прерывания *)
-  
+
   Byte(ORD("H")); (* Строка *)
   Byte(ORD("i"));
   Byte(ORD("!"));

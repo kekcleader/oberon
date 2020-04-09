@@ -106,7 +106,7 @@ BEGIN
       ival := ival * 10 + ORD(ch) - ORD("0");
       ReadCh
     END;
-    sym := int  
+    sym := int
   ELSIF ch = 22X THEN ReadCh; sym := string;
     slen := 0;
     WHILE (ch # 22X) & (ch >= " ") & (slen < LEN(sval) - 1) DO
