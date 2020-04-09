@@ -5,6 +5,7 @@ CONST
   Head* = 0; Var* = 2; Typ* = 5;
 
   (* Формы типов *)
+  Char* = 3;
   Int* = 4;
 
 TYPE
@@ -23,12 +24,14 @@ TYPE
 VAR
   curScope: Object;
 
+  charType: Type; (*Не используется*)
   intType*: Type; (*Для обработки ошибок, см. Parser.Type*)
 
 (*Для удобочитаемой отладки*)
 PROCEDURE OutType*(t: Type);
 BEGIN
   IF t.form = Int THEN Out.String("целое число")
+  ELSIF t.form = Char THEN Out.String("литера")
   ELSE Out.Int(t.form, 0)
   END
 END OutType;
@@ -77,7 +80,7 @@ BEGIN
 END ThisObj;
 
 PROCEDURE Init*;
-VAR in: Object;
+VAR o: Object;
 BEGIN
   NEW(curScope);
   curScope.class := Head;
@@ -89,14 +92,23 @@ BEGIN
   curScope.dsc.name[0] := 0X;
   curScope.dsc.dsc := NIL;
 
-  NEW(in);
-  in.class := Typ;
-  in.name := "INTEGER";
-  in.next := NIL;
-  in.dsc := NIL;
+  NEW(o);
+  o.class := Typ;
+  o.name := "CHAR";
+  o.next := NIL;
+  o.dsc := NIL;
+  charType := MakeType(Char);
+  o.type := charType;
+  curScope.dsc.next := o;
+
+  NEW(o);
+  o.class := Typ;
+  o.name := "INTEGER";
+  o.next := NIL;
+  o.dsc := NIL;
   intType := MakeType(Int);
-  in.type := intType;
-  curScope.dsc.next := in
+  o.type := intType;
+  curScope.dsc.next.next := o
 END Init;
 
 PROCEDURE Display*;
