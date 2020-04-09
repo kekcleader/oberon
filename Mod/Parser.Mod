@@ -12,16 +12,21 @@ END Import;
 PROCEDURE Type(VAR x: Gen.Item);
 VAR o: ST.Object;
 BEGIN
+  (*Тип по умолчанию, используется в случае ошибки*)
+  x.mode := ST.Typ;
+  x.type := ST.intType;
+
   IF sym = S.ident THEN
     o := ST.ThisObj();
+    S.Get(sym);
     IF o # NIL THEN
-      S.Get(sym);
       IF o.class = ST.Typ THEN
-        x.mode := ST.Typ;
         x.type := o.type
       ELSE
         S.Mark("Это не тип")
       END
+    ELSE
+      S.Mark("Неизвестный идентификатор")
     END
   ELSE (*!TODO учесть ARRAY, RECORD и др.*)
     S.Mark("Ожидается тип")

@@ -23,6 +23,8 @@ TYPE
 VAR
   curScope: Object;
 
+  intType*: Type; (*Для обработки ошибок, см. Parser.Type*)
+
 (*Для удобочитаемой отладки*)
 PROCEDURE OutType*(t: Type);
 BEGIN
@@ -92,7 +94,8 @@ BEGIN
   in.name := "INTEGER";
   in.next := NIL;
   in.dsc := NIL;
-  in.type := MakeType(Int);
+  intType := MakeType(Int);
+  in.type := intType;
   curScope.dsc.next := in
 END Init;
 
