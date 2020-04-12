@@ -27,7 +27,7 @@ END Color;
 PROCEDURE Mark*(msg: ARRAY OF CHAR);
 BEGIN
   error := TRUE;
-  Color(31);
+  Color(41); Color(97);
   Out.String("Ошибка на поз. ");
   Out.Int(SHORT(Files.Pos(r)), 0);
   Out.String(": "); Out.String(msg);
