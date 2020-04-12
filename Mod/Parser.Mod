@@ -19,14 +19,12 @@ BEGIN
   IF sym = S.ident THEN
     o := ST.ThisObj();
     S.Get(sym);
-    IF o # NIL THEN
-      IF o.class = ST.Typ THEN
-        x.type := o.type
-      ELSE
-        S.Mark("Это не тип")
-      END
+    IF o = NIL THEN
+      S.Mark("Нет такого типа")
+    ELSIF o.class # ST.Typ THEN
+      S.Mark("Это не тип")
     ELSE
-      S.Mark("Неизвестный идентификатор")
+      x.type := o.type
     END
   ELSE (*!TODO учесть ARRAY, RECORD и др.*)
     S.Mark("Ожидается тип")

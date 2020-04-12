@@ -18,14 +18,20 @@ VAR r: Files.Rider;
     slen*: INTEGER;
     error*: BOOLEAN;
 
+PROCEDURE Color(n: INTEGER);
+BEGIN
+  Out.Char(CHR(27)); Out.Char("[");
+  Out.Int(n, 0); Out.Char("m")
+END Color;
+
 PROCEDURE Mark*(msg: ARRAY OF CHAR);
 BEGIN
   error := TRUE;
-
+  Color(31);
   Out.String("Ошибка на поз. ");
   Out.Int(SHORT(Files.Pos(r)), 0);
   Out.String(": "); Out.String(msg);
-  Out.Char("."); Out.Ln
+  Out.Char("."); Color(0); Out.Ln
 END Mark;
 
 PROCEDURE ReadCh;
