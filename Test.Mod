@@ -1,6 +1,7 @@
 MODULE Test;
-VAR a, b, c, n: INTEGER;
-  d: CHAR3;
+VAR i: INTEGER;
+  c: CHAR;
 BEGIN
-  n := a * b DIV (b + c) - 34
+  i := 25;
+  c := i
 END Test.

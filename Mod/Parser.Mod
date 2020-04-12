@@ -2,7 +2,7 @@ MODULE Parser;
 IMPORT Out, Files, S := Scanner, ST := SymTable, Gen := Generator;
 VAR sym: INTEGER;
 
-PROCEDURE ^Expression;
+PROCEDURE ^Expression(VAR x: Gen.Item);
 
 PROCEDURE Import;
 BEGIN
@@ -98,7 +98,7 @@ END Declarations;
 Statements/Операторы означает последовательность операторов. *)
 
 (*УПРОЩЕНО: factor = number | ident | "(" expression ")".*)
-PROCEDURE Factor;
+PROCEDURE Factor(VAR x: Gen.Item);
 BEGIN
   IF sym = S.int THEN
     Out.String("Прочитано число ");
@@ -111,7 +111,7 @@ BEGIN
     S.Get(sym)
   ELSIF sym = S.lparen THEN
     S.Get(sym);
-    Expression;
+    Expression(x);
     IF sym = S.rparen THEN S.Get(sym)
     ELSE S.Mark("Ожидается )")
     END
@@ -121,14 +121,15 @@ BEGIN
 END Factor;
 
 (*term = factor {MulOperator factor}.*)
-PROCEDURE Term;
+PROCEDURE Term(VAR x: Gen.Item);
 VAR op: INTEGER;
+  y: Gen.Item;
 BEGIN
-  Factor;
+  Factor(x);
   WHILE (sym = S.times) OR (sym = S.div) OR (sym = S.mod) DO
     op := sym;
     S.Get(sym);
-    Factor;
+    Factor(y);
     IF op = S.times THEN
       Out.String("умножение")
     ELSIF op = S.div THEN
@@ -141,7 +142,7 @@ BEGIN
 END Term;
 
 (*SimpleExpression = ["+"|"-"] term {AddOperator term}.*)
-PROCEDURE SimpleExpression;
+PROCEDURE SimpleExpression(VAR x: Gen.Item);
 VAR minus: BOOLEAN;
   op: INTEGER;
 BEGIN
@@ -152,14 +153,14 @@ BEGIN
     minus := TRUE;
     S.Get(sym)
   END;
-  Term;
+  Term(x);
   IF minus THEN
     Out.String("Унарный минус."); Out.Ln
   END;
   WHILE (sym = S.plus) OR (sym = S.minus) DO
     op := sym;
     S.Get(sym);
-    Term;
+    Term(x);
     IF op = S.plus THEN
       Out.String("плюс")
     ELSE
@@ -170,28 +171,49 @@ BEGIN
 END SimpleExpression;
 
 (*expression = SimpleExpression [relation SimpleExpression].*)
-PROCEDURE Expression;
+PROCEDURE Expression(VAR x: Gen.Item);
 BEGIN
-  SimpleExpression
+  SimpleExpression(x)
 END Expression;
 
-(* assignment = ident ":=" expression. *)
-PROCEDURE Assignment(name: ARRAY OF CHAR);
+(* assignment = ident ":=" expression.
+x - то, что слева от знака присваивания,
+y - то, что справа от знака присваивания.*)
+PROCEDURE Assignment(VAR x: Gen.Item);
+VAR y: Gen.Item;
 BEGIN
   S.Get(sym); (*пропускаем :=*)
-  Expression;
-  Out.String("Переменной "); Out.String(name);
-  Out.String(" присвоено указанное значение."); Out.Ln
+  Expression(y);
+  Out.String("Переменной присвоено указанное значение."); Out.Ln
 END Assignment;
 
+(* designator = qualident {selector}.
+qualident = [ident "."] ident.
+selector = "[" expression "]" | ...
+но здесь упрощено: designator = ident.*)
+PROCEDURE Designator(VAR x: Gen.Item);
+VAR o: ST.Object;
+BEGIN
+  x.mode := ST.Var;
+  o := ST.ThisObj();
+  S.Get(sym);
+  IF o = NIL THEN
+    S.Mark("Нет такой переменной")
+  ELSIF o.class # ST.Var THEN
+    S.Mark("Это не переменная")
+  ELSE
+    x.type := o.type
+  END
+END Designator;
+
 PROCEDURE Statements;
-VAR name: ARRAY 32 OF CHAR;
+VAR x: Gen.Item;
 BEGIN
   REPEAT
     WHILE sym = S.semicol DO S.Get(sym) END;
-    IF sym = S.ident THEN name := S.id; S.Get(sym);
+    IF sym = S.ident THEN Designator(x);
       IF sym = S.equ THEN sym := S.becomes; S.Mark("Ожидается :=") END;
-      IF sym = S.becomes THEN Assignment(name)
+      IF sym = S.becomes THEN Assignment(x)
       ELSE S.Mark("Ожидается :=") (*!TODO обработать вызов процедуры*)
       END
     END
