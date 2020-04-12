@@ -1,7 +1,9 @@
 MODULE Test;
-VAR i: INTEGER;
-  c: CHAR;
+VAR a, b, c, n: INTEGER;
+  d, f: CHAR;
 BEGIN
-  i := 25;
-  c := i
+  d := d;
+  f := d;
+  a := b;
+  f := f;
 END Test.

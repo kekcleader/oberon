@@ -91,24 +91,25 @@ BEGIN
   END
 END Declarations;
 
-(* Операторы = Оператор {";" Оператор}.
-Оператор = Присваивание | ВызовПроцедуры | ОператорIf |
-           ОператорCase | ОператорWhile | ОператорRepeat |
-            ОператорFor | "".
-Statements/Операторы означает последовательность операторов. *)
-
 (*УПРОЩЕНО: factor = number | ident | "(" expression ")".*)
 PROCEDURE Factor(VAR x: Gen.Item);
+VAR o: ST.Object;
 BEGIN
   IF sym = S.int THEN
+    x.mode := ST.Var;
+    x.type := ST.intType;
     Out.String("Прочитано число ");
     Out.Int(S.ival, 0); Out.Ln;
     S.Get(sym)
   ELSIF sym = S.ident THEN
-    Out.String("Прочитан идентификатор '");
-    Out.String(S.id);
-    Out.Char("'"); Out.Ln;
-    S.Get(sym)
+    o := ST.ThisObj();
+    S.Get(sym);
+    IF o = NIL THEN
+      S.Mark("Идентификатор не объявлен")
+    ELSE
+      x.mode := o.class;
+      x.type := o.type
+    END
   ELSIF sym = S.lparen THEN
     S.Get(sym);
     Expression(x);
@@ -130,12 +131,16 @@ BEGIN
     op := sym;
     S.Get(sym);
     Factor(y);
-    IF op = S.times THEN
-      Out.String("умножение")
-    ELSIF op = S.div THEN
-      Out.String("деление")
+    IF (x.type.form = ST.Int) & (y.type.form = ST.Int) THEN
+      IF op = S.times THEN
+        Out.String("умножение")
+      ELSIF op = S.div THEN
+        Out.String("деление")
+      ELSE
+        Out.String("остаток от деления")
+      END
     ELSE
-      Out.String("остаток от деления")
+      S.Mark("Операция неприменима")
     END;
     Out.Ln
   END
@@ -145,6 +150,7 @@ END Term;
 PROCEDURE SimpleExpression(VAR x: Gen.Item);
 VAR minus: BOOLEAN;
   op: INTEGER;
+  y: Gen.Item;
 BEGIN
   minus := FALSE;
   IF sym = S.plus THEN
@@ -155,16 +161,24 @@ BEGIN
   END;
   Term(x);
   IF minus THEN
-    Out.String("Унарный минус."); Out.Ln
+    IF x.type.form = ST.Int THEN
+      Out.String("Унарный минус"); Out.Ln
+    ELSE
+      S.Mark("Операция унарного минуса неприменима")
+    END
   END;
   WHILE (sym = S.plus) OR (sym = S.minus) DO
     op := sym;
     S.Get(sym);
-    Term(x);
-    IF op = S.plus THEN
-      Out.String("плюс")
+    Term(y);
+    IF (x.type.form = ST.Int) & (y.type.form = ST.Int) THEN
+      IF op = S.plus THEN
+        Out.String("плюс")
+      ELSE
+        Out.String("минус")
+      END
     ELSE
-      Out.String("минус")
+      S.Mark("Операция неприменима")
     END;
     Out.Ln
   END
@@ -184,7 +198,11 @@ VAR y: Gen.Item;
 BEGIN
   S.Get(sym); (*пропускаем :=*)
   Expression(y);
-  Out.String("Переменной присвоено указанное значение."); Out.Ln
+  IF x.type = y.type THEN
+    Out.String("Переменной присвоено указанное значение."); Out.Ln
+  ELSE
+    S.Mark("Не совпадают типы")
+  END
 END Assignment;
 
 (* designator = qualident {selector}.
@@ -206,6 +224,10 @@ BEGIN
   END
 END Designator;
 
+(* Операторы = Оператор {";" Оператор}.
+Оператор = [Присваивание | ВызовПроцедуры | ОператорIf |
+           ОператорCase | ОператорWhile | ОператорRepeat | ОператорFor].
+Statements/Операторы означает последовательность операторов. *)
 PROCEDURE Statements;
 VAR x: Gen.Item;
 BEGIN
