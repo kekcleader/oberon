@@ -114,21 +114,23 @@ END Init;
 PROCEDURE Display*;
 VAR h, p: Object;
 BEGIN
-  Out.String("Диагностика горизонта событий"); Out.Ln;
+  Out.String("Содержимое символьной таблицы:"); Out.Ln;
   h := curScope;
   WHILE h # NIL DO
     p := h.next;
     WHILE p # NIL DO
-      Out.String(p.name);
-      Out.String(": ");
+      Out.String("  "); Out.String(p.name); Out.String(": ");
       IF p.class = Head THEN Out.String("заголовочный")
-      ELSIF p.class = Var THEN Out.String("переменная")
+      ELSIF p.class = Var THEN
+        Out.String("переменная типа "); OutType(p.type)
       ELSIF p.class = Typ THEN Out.String("тип")
       END;
       Out.Ln;
       p := p.next
     END;
-    Out.String("Конец области видимости"); Out.Ln;
+    IF h.dsc # NIL THEN
+      Out.String("Следующая область видимости:"); Out.Ln
+    END;
     h := h.dsc
   END
 END Display;
