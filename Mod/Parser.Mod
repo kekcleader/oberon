@@ -107,6 +107,16 @@ BEGIN
     Out.String("Прочитана литера ");
     Out.Char(CHR(S.ival)); Out.Ln;
     S.Get(sym)
+  ELSIF sym = S.string THEN
+    x.mode := ST.Var;
+    x.type := ST.charType;
+    IF S.slen = 1 THEN
+      Out.String("Прочитана литера ");
+      Out.Char(S.sval[0]); Out.Ln
+    ELSE
+      S.Mark("Допускается только CHAR")
+    END;
+    S.Get(sym)
   ELSIF sym = S.ident THEN
     o := ST.ThisObj();
     S.Get(sym);
