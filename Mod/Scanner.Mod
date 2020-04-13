@@ -1,13 +1,22 @@
 MODULE Scanner;
 IMPORT Out, Files;
 CONST
-  null* = 0; module* = 1; import* = 2; const* = 3; var* = 4; begin* = 5;
-  end* = 6; if* = 7; then* = 8; else* = 9; elsif* = 10; while* = 11;
-  ident* = 12; semicol* = 13; colon* = 14; comma* = 15; period* = 16;
-  becomes* = 17; equ* = 18; neq* = 19; les* = 20; leq* = 21; gtr* = 22; geq* = 23;
-  lparen* = 24; rparen* = 25; lbrak* = 26; rbrak* = 27; lbrace* = 28; rbrace* = 29;
-  int* = 30; string* = 31; not* = 32; and* = 33; or* = 34; plus* = 35; minus* = 36;
-  rdiv* = 37; div* = 38; mod* = 39; times* = 40; eot* = 64;
+  (*Лексемы*)
+  null = 0; times* = 1; rdiv* = 2; div* = 3; mod* = 4;
+  and* = 5; plus* = 6; minus* = 7; or* = 8; eql* = 9;
+  neq* = 10; lss* = 11; leq* = 12; gtr* = 13; geq* = 14;
+  in* = 15; is* = 16; arrow* = 17; period* = 18;
+  char* = 20; int* = 21; real* = 22; false* = 23; true* = 24;
+  nil* = 25; string* = 26; not* = 27; lparen* = 28; lbrak* = 29;
+  lbrace* = 30; ident* = 31;
+  if* = 32; while* = 34; repeat* = 35; case* = 36; for* = 37;
+  comma* = 40; colon* = 41; becomes* = 42; upto* = 43; rparen* = 44;
+  rbrak* = 45; rbrace* = 46; then* = 47; of* = 48; do* = 49;
+  to* = 50; by* = 51; semicolon* = 52; end* = 53; bar* = 54;
+  else* = 55; elsif* = 56; until* = 57; return* = 58;
+  array* = 60; record* = 61; pointer* = 62; const* = 63; type* = 64;
+  var* = 65; procedure* = 66; begin* = 67; import* = 68; module* = 69;
+  eot = 70;
 
 VAR r: Files.Rider;
     ch: CHAR;
@@ -42,6 +51,8 @@ BEGIN
 END ReadCh;
 
 PROCEDURE Get*(VAR sym: INTEGER);
+VAR d: ARRAY 30 OF INTEGER; (*digits*)
+  i, dlen, base: INTEGER;
 BEGIN
   WHILE (ch # 0X) & (ch <= " ") DO
     ReadCh
@@ -50,7 +61,7 @@ BEGIN
   IF r.eof THEN sym := eot
   ELSIF ch = "," THEN sym := comma; ReadCh
   ELSIF ch = "." THEN sym := period; ReadCh
-  ELSIF ch = ";" THEN sym := semicol; ReadCh
+  ELSIF ch = ";" THEN sym := semicolon; ReadCh
   ELSIF ch = "+" THEN sym := plus; ReadCh
   ELSIF ch = "-" THEN sym := minus; ReadCh
   ELSIF ch = "*" THEN sym := times; ReadCh
@@ -63,11 +74,11 @@ BEGIN
   ELSIF ch = "]" THEN sym := rbrak; ReadCh
   ELSIF ch = "{" THEN sym := lbrace; ReadCh
   ELSIF ch = "}" THEN sym := rbrace; ReadCh
-  ELSIF ch = "=" THEN sym := equ; ReadCh
+  ELSIF ch = "=" THEN sym := eql; ReadCh
   ELSIF ch = "#" THEN sym := neq; ReadCh
   ELSIF ch = "<" THEN ReadCh;
     IF ch = "=" THEN sym := leq; ReadCh
-    ELSE sym := les
+    ELSE sym := lss
     END
   ELSIF ch = ">" THEN ReadCh;
     IF ch = "=" THEN sym := geq; ReadCh
@@ -107,12 +118,34 @@ BEGIN
     ELSE sym := ident
     END
   ELSIF ("0" <= ch) & (ch <= "9") THEN
-    ival := ORD(ch) - ORD("0"); ReadCh;
-    WHILE ("0" <= ch) & (ch <= "9") DO
-      ival := ival * 10 + ORD(ch) - ORD("0");
+    d[0] := ORD(ch) - ORD("0"); ReadCh;
+    dlen := 1;
+    WHILE ("0" <= ch) & (ch <= "9") OR
+          ("A" <= ch) & (ch <= "F") DO
+      IF dlen < LEN(d) THEN
+        IF ("0" <= ch) & (ch <= "9") THEN d[dlen] := ORD(ch) - ORD("0")
+        ELSE d[dlen] := ORD(ch) - ORD("A") + 10
+        END;
+        INC(dlen)
+      ELSE Mark("Слишком длинное число")
+      END;
       ReadCh
     END;
-    sym := int
+    sym := int;
+    IF (ch = "X") OR (ch = "H") THEN
+      base := 16;
+      IF ch = "X" THEN sym := char END;
+      ReadCh
+    ELSE base := 10
+    END;
+    ival := 0; i := 0;
+    WHILE i < dlen DO
+      IF (base = 10) & (d[i] >= 10) THEN
+        Mark("Некорректное число")
+      END;
+      ival := ival * base + d[i];
+      INC(i)
+    END
   ELSIF ch = 22X THEN ReadCh; sym := string;
     slen := 0;
     WHILE (ch # 22X) & (ch >= " ") & (slen < LEN(sval) - 1) DO
@@ -123,7 +156,7 @@ BEGIN
     IF ch = 0X THEN Mark("Неожиданный конец файла")
     ELSIF ch < " " THEN Mark("Недопустимая литера в строке")
     ELSIF ch # 22X THEN Mark("Слишком длинная строка")
-      END;
+    END;
     sval[slen] := 0X;
       (*Промотка до ближайшей кавычки*)
     WHILE (ch # 0X) & (ch # 22X) DO ReadCh END;

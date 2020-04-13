@@ -79,7 +79,7 @@ BEGIN
           Out.String("Объявлена переменная "); Out.String(names[i]);
           Out.String(" типа "); ST.OutType(o.type); Out.Ln
         END;
-        IF sym = S.semicol THEN
+        IF sym = S.semicolon THEN
           S.Get(sym)
         ELSE
           S.Mark("Ожидается точка с запятой")
@@ -91,7 +91,7 @@ BEGIN
   END
 END Declarations;
 
-(*УПРОЩЕНО: factor = number | ident | "(" expression ")".*)
+(*УПРОЩЕНО: factor = number | char | ident | "(" expression ")".*)
 PROCEDURE Factor(VAR x: Gen.Item);
 VAR o: ST.Object;
 BEGIN
@@ -100,6 +100,12 @@ BEGIN
     x.type := ST.intType;
     Out.String("Прочитано число ");
     Out.Int(S.ival, 0); Out.Ln;
+    S.Get(sym)
+  ELSIF sym = S.char THEN
+    x.mode := ST.Var;
+    x.type := ST.charType;
+    Out.String("Прочитана литера ");
+    Out.Char(CHR(S.ival)); Out.Ln;
     S.Get(sym)
   ELSIF sym = S.ident THEN
     o := ST.ThisObj();
@@ -232,14 +238,14 @@ PROCEDURE Statements;
 VAR x: Gen.Item;
 BEGIN
   REPEAT
-    WHILE sym = S.semicol DO S.Get(sym) END;
+    WHILE sym = S.semicolon DO S.Get(sym) END;
     IF sym = S.ident THEN Designator(x);
-      IF sym = S.equ THEN sym := S.becomes; S.Mark("Ожидается :=") END;
+      IF sym = S.eql THEN sym := S.becomes; S.Mark("Ожидается :=") END;
       IF sym = S.becomes THEN Assignment(x)
       ELSE S.Mark("Ожидается :=") (*!TODO обработать вызов процедуры*)
       END
     END
-  UNTIL sym # S.semicol
+  UNTIL sym # S.semicolon
 END Statements;
 
 (* Модуль = MODULE идент ";" Объявления [BEGIN Операторы] END идент ".". *)
@@ -251,7 +257,7 @@ BEGIN
     IF sym = S.ident THEN name := S.id; S.Get(sym)
     ELSE S.Mark("Ожидается идентификатор"); name[0] := 0X
     END;
-    IF sym = S.semicol THEN S.Get(sym)
+    IF sym = S.semicolon THEN S.Get(sym)
     ELSE S.Mark("Ожидается точка с запятой")
     END;
     Import;

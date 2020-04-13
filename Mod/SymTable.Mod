@@ -24,8 +24,7 @@ TYPE
 VAR
   curScope: Object;
 
-  charType: Type; (*Не используется*)
-  intType*: Type; (*Для обработки ошибок, см. Parser.Type*)
+  charType*, intType*: Type;
 
 (*Для удобочитаемой отладки*)
 PROCEDURE OutType*(t: Type);

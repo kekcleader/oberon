@@ -2,7 +2,7 @@ MODULE Test;
 VAR a, b, c, n: INTEGER;
   d, f: CHAR;
 BEGIN
-  d := b;
+  d := 41X;
   f := d;
   a := b;
   f := f;
