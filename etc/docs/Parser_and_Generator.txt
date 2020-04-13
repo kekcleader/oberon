@@ -1,0 +1,33 @@
+VAR a, c: INTEGER;
+    --- создан Object (name="a",class=Var,type=intType,val=8001200)
+    --- создан Object (name="c",class=Var,type=intType,val=8001204)
+BEGIN
+
+                op = +
+             x         y
+  a    :=    c    +    5
+  |          |         |
+  |          |         '-Item(mode=Const,type=intType,val=5)
+  |          '-Item(mode=Var,type=intType,val=8001204)
+  |
+  |           LDR R0, 8001204
+  |           ADD R0, R0, 5
+  |          ._____ _____,
+  |                v
+  |               Item(mode=Reg,type=intType,val=R0)
+  |
+  '-Item(mode=Var,type=intType,val=8001200)
+  
+  STR R0, 8001200
+
+
+LDR R0, 8001204
+ADD R0, R0, 5
+STR R0, 8001200
+
+mode бывает Const, Var и Reg (пока).
+  
+  
+intType - это такой Object
+charType - это такой Object
+(глобальные переменные в модуле SymTable)

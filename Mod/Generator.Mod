@@ -4,7 +4,8 @@ CONST fname = "Test";
 TYPE
   Item* = RECORD
     mode*: INTEGER; (* Режим предмета, используются константы из SymTable *)
-    type*: ST.Type
+    type*: ST.Type;
+    val*: INTEGER
   END;
 VAR
   F: Files.File;

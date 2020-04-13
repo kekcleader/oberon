@@ -76,6 +76,7 @@ BEGIN
         FOR i := 0 TO n - 1 DO
           o := ST.NewObj(names[i], ST.Var);
           o.type := x.type;
+          (*o.val := ...; !FIXME*)
           Out.String("Объявлена переменная "); Out.String(names[i]);
           Out.String(" типа "); ST.OutType(o.type); Out.Ln
         END;
@@ -236,7 +237,8 @@ BEGIN
   ELSIF o.class # ST.Var THEN
     S.Mark("Это не переменная")
   ELSE
-    x.type := o.type
+    x.type := o.type;
+    x.val := o.val
   END
 END Designator;
 

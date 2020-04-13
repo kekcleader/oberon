@@ -19,6 +19,7 @@ TYPE
     class*: INTEGER; (* Класс объекта *)
     type*: Type;
     name*: ARRAY 32 OF CHAR;
+    val*: INTEGER;
     next*, dsc*: Object
   END;
 VAR
