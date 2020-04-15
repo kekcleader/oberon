@@ -1,6 +1,7 @@
 MODULE Parser;
 IMPORT Out, Files, S := Scanner, ST := SymTable, Gen := Generator;
 VAR sym: INTEGER;
+  dc: INTEGER; (*Счётчик данных (data counter)*)
 
 PROCEDURE ^Expression(VAR x: Gen.Item);
 
@@ -44,7 +45,7 @@ END Type;
 Идентификаторы = Идентификатор {"," Идентификатор}.
 Тип = Идентификатор. *)
 
-PROCEDURE Declarations;
+PROCEDURE Declarations(VAR varsize: INTEGER);
 VAR x: Gen.Item;
     i, n: INTEGER;
     o: ST.Object;
@@ -76,9 +77,12 @@ BEGIN
         FOR i := 0 TO n - 1 DO
           o := ST.NewObj(names[i], ST.Var);
           o.type := x.type;
-          (*o.val := ...; !FIXME*)
+          o.val := varsize;
+          INC(varsize, 4);(*!TODO учитывать размер типа и выравнивание*)
           Out.String("Объявлена переменная "); Out.String(names[i]);
-          Out.String(" типа "); ST.OutType(o.type); Out.Ln
+          Out.String(" типа "); ST.OutType(o.type);
+          Out.String(" (адрес "); Out.Int(o.val, 0); Out.String(").");
+          Out.Ln
         END;
         IF sym = S.semicolon THEN
           S.Get(sym)
@@ -97,20 +101,23 @@ PROCEDURE Factor(VAR x: Gen.Item);
 VAR o: ST.Object;
 BEGIN
   IF sym = S.int THEN
-    x.mode := ST.Var;
+    x.mode := ST.Const;
     x.type := ST.intType;
+    x.val := S.ival;
     Out.String("Прочитано число ");
     Out.Int(S.ival, 0); Out.Ln;
     S.Get(sym)
   ELSIF sym = S.char THEN
-    x.mode := ST.Var;
+    x.mode := ST.Const;
     x.type := ST.charType;
+    x.val := S.ival;
     Out.String("Прочитана литера ");
     Out.Char(CHR(S.ival)); Out.Ln;
     S.Get(sym)
   ELSIF sym = S.string THEN
-    x.mode := ST.Var;
+    x.mode := ST.Const;
     x.type := ST.charType;
+    x.val := ORD(S.sval[0]);
     IF S.slen = 1 THEN
       Out.String("Прочитана литера ");
       Out.Char(S.sval[0]); Out.Ln
@@ -125,7 +132,8 @@ BEGIN
       S.Mark("Идентификатор не объявлен")
     ELSE
       x.mode := o.class;
-      x.type := o.type
+      x.type := o.type;
+      x.val := o.val
     END
   ELSIF sym = S.lparen THEN
     S.Get(sym);
@@ -149,12 +157,24 @@ BEGIN
     S.Get(sym);
     Factor(y);
     IF (x.type.form = ST.Int) & (y.type.form = ST.Int) THEN
-      IF op = S.times THEN
-        Out.String("умножение")
-      ELSIF op = S.div THEN
-        Out.String("деление")
+      IF (x.mode = ST.Const) & (y.mode = ST.Const) THEN
+        IF op = S.times THEN
+          x.val := x.val * y.val (*!TODO проверить переполнение*)
+        ELSE (*DIV OR MOD*)
+          IF op = S.div THEN (*!TODO проверить деление на нуль*)
+            x.val := x.val DIV y.val
+          ELSE
+            x.val := x.val MOD y.val
+          END
+        END
       ELSE
-        Out.String("остаток от деления")
+        IF op = S.times THEN
+          Out.String("умножение")
+        ELSIF op = S.div THEN
+          Out.String("деление")
+        ELSE
+          Out.String("остаток от деления")
+        END
       END
     ELSE
       S.Mark("Операция неприменима")
@@ -179,7 +199,11 @@ BEGIN
   Term(x);
   IF minus THEN
     IF x.type.form = ST.Int THEN
-      Out.String("Унарный минус"); Out.Ln
+      IF x.mode = ST.Const THEN
+        x.val := -x.val
+      ELSE
+        Out.String("Унарный минус"); Out.Ln
+      END
     ELSE
       S.Mark("Операция унарного минуса неприменима")
     END
@@ -189,10 +213,18 @@ BEGIN
     S.Get(sym);
     Term(y);
     IF (x.type.form = ST.Int) & (y.type.form = ST.Int) THEN
-      IF op = S.plus THEN
-        Out.String("плюс")
+      IF (x.mode = ST.Const) & (y.mode = ST.Const) THEN
+        IF op = S.plus THEN
+          INC(x.val, y.val) (*!TODO проверить переполнение*)
+        ELSE
+          DEC(x.val, y.val) (*!TODO проверить переполнение*)
+        END
       ELSE
-        Out.String("минус")
+        IF op = S.plus THEN
+          Out.String("плюс")
+        ELSE
+          Out.String("минус")
+        END
       END
     ELSE
       S.Mark("Операция неприменима")
@@ -216,7 +248,10 @@ BEGIN
   S.Get(sym); (*пропускаем :=*)
   Expression(y);
   IF x.type = y.type THEN
-    Out.String("Переменной присвоено указанное значение."); Out.Ln
+    Out.String("Переменной по адресу ");
+    Out.Int(x.val, 0);
+    Out.String(" присвоено значение ");
+    Out.Int(y.val, 0); Out.Char("."); Out.Ln
   ELSE
     S.Mark("Не совпадают типы")
   END
@@ -273,7 +308,8 @@ BEGIN
     ELSE S.Mark("Ожидается точка с запятой")
     END;
     Import;
-    Declarations;
+    dc := 80002000;
+    Declarations(dc);
     IF sym = S.begin THEN S.Get(sym); Statements END;
     IF sym = S.end THEN
       S.Get(sym);

@@ -2,7 +2,7 @@ MODULE SymTable;
 IMPORT Out, S := Scanner;
 CONST
   (* Классы объектов (и одновременно режимы предметов) *)
-  Head* = 0; Var* = 2; Typ* = 5;
+  Head* = 0; Const* = 1; Var* = 2; Typ* = 5;
 
   (* Формы типов *)
   Char* = 3;
@@ -22,6 +22,14 @@ TYPE
     val*: INTEGER;
     next*, dsc*: Object
   END;
+
+(* Назначение поля val в зависимости от значения поля class (в Object):
+class | val
+------+-----------------------
+Var   | адрес переменной
+Const | значение константы
+Type  | не используется (пока)   *)
+
 VAR
   curScope: Object;
 
