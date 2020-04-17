@@ -29,7 +29,7 @@ BEGIN
   END
 END Import;
 
-(*СписокИмпорт = IMPORT импорт {"," импорт} ";".*)
+(*СписокИмпорта = IMPORT импорт {"," импорт} ";".*)
 PROCEDURE ImportList;
 BEGIN
   IF sym = S.import THEN
@@ -50,8 +50,7 @@ END ImportList;
 PROCEDURE Type(VAR tp: ST.Type);
 VAR o: ST.Object;
 BEGIN
-  (*Тип по умолчанию, используется в случае ошибки*)
-  tp := ST.intType;
+  tp := ST.intType; (*Тип по умолчанию, используется в случае ошибки*)
 
   IF sym = S.ident THEN
     o := ST.ThisObj();
@@ -68,7 +67,7 @@ BEGIN
   END
 END Type;
 
-(* Объявления = [CONST {ОбъявлениеКонстант ";"}]
+(*Объявления = [CONST {ОбъявлениеКонстант ";"}]
     [TYPE {ОбъявлениеТипов ";"}]
     [VAR {ОбъявлениеПеременных ";"}]
     {ОбъявлениеПроцедуры ";"}.
@@ -79,22 +78,21 @@ END Type;
 Объявления = [VAR {ОбъявлениеПеременных ";"}].
 ОбъявлениеПеременных = Идентификаторы ":" Тип.
 Идентификаторы = Идентификатор {"," Идентификатор}.
-Тип = Идентификатор. *)
-
+Тип = Идентификатор.*)
 PROCEDURE Declarations(VAR varsize: INTEGER);
 VAR tp: ST.Type;
     i, n: INTEGER;
     o: ST.Object;
     names: ARRAY 30, 32 OF CHAR;
 BEGIN
-  IF sym = S.var THEN (* 1. Если считано слово VAR, то: *)
-    S.Get(sym); (* Переходим к названию первой переменной *)
+  IF sym = S.var THEN (*1. Если считано слово VAR, то:*)
+    S.Get(sym); (*Переходим к названию первой переменной*)
     WHILE sym = S.ident DO
       names[0] := S.id;
-      S.Get(sym); (* Переходим к запятой или к двоеточию *)
+      S.Get(sym); (*Переходим к запятой или к двоеточию*)
       n := 1;
       WHILE sym = S.comma DO
-        S.Get(sym); (* Переходим к названию следующей перменной *)
+        S.Get(sym); (*Переходим к названию следующей перменной*)
         IF sym = S.ident THEN
           IF n < LEN(names) THEN
             names[n] := S.id;
@@ -105,7 +103,7 @@ BEGIN
         ELSE
           S.Mark("Ожидается идентификатор")
         END;
-        S.Get(sym) (* Переходим к запятой или к двоеточию *)
+        S.Get(sym) (*Переходим к запятой или к двоеточию*)
       END;
       IF sym = S.colon THEN
         S.Get(sym);
@@ -132,7 +130,7 @@ BEGIN
   END
 END Declarations;
 
-(*УПРОЩЕНО: factor = number | char | ident | "(" expression ")".*)
+(*УПРОЩЕНО: множитель = число | литера | идент | "(" выражение ")".*)
 PROCEDURE Factor(VAR x: Gen.Item);
 VAR o: ST.Object;
 BEGIN
@@ -182,7 +180,7 @@ BEGIN
   END
 END Factor;
 
-(*term = factor {MulOperator factor}.*)
+(*слагаемое = множитель {ОперацияУмножения множитель}.*)
 PROCEDURE Term(VAR x: Gen.Item);
 VAR op: INTEGER;
   y: Gen.Item;
@@ -219,7 +217,7 @@ BEGIN
   END
 END Term;
 
-(*SimpleExpression = ["+"|"-"] term {AddOperator term}.*)
+(*ПростоеВыражение = ["+"|"-"] слагаемое {ОператорСложения слагаемое}.*)
 PROCEDURE SimpleExpression(VAR x: Gen.Item);
 VAR minus: BOOLEAN;
   op: INTEGER;
@@ -269,13 +267,13 @@ BEGIN
   END
 END SimpleExpression;
 
-(*expression = SimpleExpression [relation SimpleExpression].*)
+(*выражение = ПростоеВыражение [отношение ПростоеВыражение].*)
 PROCEDURE Expression(VAR x: Gen.Item);
 BEGIN
   SimpleExpression(x)
 END Expression;
 
-(* assignment = ident ":=" expression.
+(*Присваивание = идент ":=" выражение.
 x - то, что слева от знака присваивания,
 y - то, что справа от знака присваивания.*)
 PROCEDURE Assignment(VAR x: Gen.Item);
@@ -293,10 +291,11 @@ BEGIN
   END
 END Assignment;
 
-(* designator = qualident {selector}.
-qualident = [ident "."] ident.
-selector = "[" expression "]" | ...
-но здесь упрощено: designator = ident.*)
+(*Designator - обозначение.
+Обозначение = уточнИдент {селектор}.
+уточнИдент = [идент "."] идент.
+селектор = "[" выражение "]" | ...
+Но здесь упрощено: Обозначение = идент.*)
 PROCEDURE Designator(VAR x: Gen.Item);
 VAR o: ST.Object;
 BEGIN
@@ -313,10 +312,10 @@ BEGIN
   END
 END Designator;
 
-(* Операторы = Оператор {";" Оператор}.
+(*Операторы = Оператор {";" Оператор}.
 Оператор = [Присваивание | ВызовПроцедуры | ОператорIf |
            ОператорCase | ОператорWhile | ОператорRepeat | ОператорFor].
-Statements/Операторы означает последовательность операторов. *)
+Statements/Операторы означает последовательность операторов.*)
 PROCEDURE Statements;
 VAR x: Gen.Item;
 BEGIN
@@ -331,12 +330,8 @@ BEGIN
   UNTIL sym # S.semicolon
 END Statements;
 
-(*
-Модуль = MODULE идент ";" [СписокИмпорт] Объявления
-[BEGIN Операторы] END идент ".".
-СписокИмпорт = IMPORT импорт {"," импорт} ";".
-импорт = идент [":=" идент].
-*)
+(*Модуль = MODULE идент ";" [СписокИмпорта] Объявления
+[BEGIN Операторы] END идент ".".*)
 PROCEDURE Module;
 VAR name: ARRAY 32 OF CHAR;
 BEGIN
@@ -367,15 +362,15 @@ BEGIN
   END
 END Module;
 
-(* Разбирает лексемы, получаемые из модуля Scanner, в соответствии
+(*Разбирает лексемы, получаемые из модуля Scanner, в соответствии
 с синтаксисом языка Оберон. Возвращает TRUE в случае
 успешной компиляции. Вызывается из модуля Compiler.
 В будущем будет вызывать кодогенератор (из отдельного модуля). *)
 PROCEDURE Compile*(): BOOLEAN;
 BEGIN
-  Gen.WriteDummy; (* Сгенерировать исполнимый файл. Хардкод. *)
-  S.Get(sym); (* Получить наперёд одну лексему *)
-  Module; (* Запустить разбор синтаксической структуры МОДУЛЬ *)
+  Gen.WriteDummy; (*Сгенерировать исполнимый файл. Хардкод.*)
+  S.Get(sym); (* олучить наперёд одну лексему*)
+  Module; (*Запустить разбор синтаксической структуры МОДУЛЬ*)
   ST.Display;
   RETURN ~S.error
 END Compile;
