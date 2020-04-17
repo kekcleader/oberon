@@ -5,11 +5,7 @@ VAR sym: INTEGER;
 
 PROCEDURE ^Expression(VAR x: Gen.Item);
 
-(*
-СписокИмпорт = IMPORT импорт {"," импорт} ";".
-импорт = идент [":=" идент].
-*)
-
+(*импорт = идент [":=" идент].*)
 PROCEDURE Import;
 VAR ident1, ident2: ARRAY 32 OF CHAR;
 BEGIN
@@ -33,6 +29,7 @@ BEGIN
   END
 END Import;
 
+(*СписокИмпорт = IMPORT импорт {"," импорт} ";".*)
 PROCEDURE ImportList;
 BEGIN
   IF sym = S.import THEN
@@ -336,7 +333,7 @@ END Statements;
 
 (*
 Модуль = MODULE идент ";" [СписокИмпорт] Объявления
-[BEGIN Операторы] END идент ".". 
+[BEGIN Операторы] END идент ".".
 СписокИмпорт = IMPORT импорт {"," импорт} ";".
 импорт = идент [":=" идент].
 *)
