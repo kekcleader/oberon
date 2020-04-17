@@ -1,9 +1,9 @@
 MODULE Test;
+IMPORT In, O := Out;
 VAR a, b, c, n: INTEGER;
   d, f: CHAR;
 BEGIN
-  a := 4 * 3;
+  a := 4;
   n := 5;
-  a := 4 * n;
-  d := "B"
+  a := a * n;
 END Test.

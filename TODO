@@ -1,3 +1,1 @@
 
-* Процедура Parser.Type: пусть работает с ST.Type, а не с Gen.Item.
-* Определять значения полей val в Object'ах и Item'ах.

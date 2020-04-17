@@ -87,6 +87,13 @@ BEGIN
   RETURN o
 END ThisObj;
 
+PROCEDURE Import*(alias, modname: ARRAY OF CHAR);
+BEGIN
+  Out.String("Импортируем "); Out.String(modname); 
+  Out.String(" под псевдонимом "); Out.String(alias);
+  Out.Char("."); Out.Ln
+END Import;
+
 PROCEDURE Init*;
 VAR o: Object;
 BEGIN

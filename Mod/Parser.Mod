@@ -5,17 +5,56 @@ VAR sym: INTEGER;
 
 PROCEDURE ^Expression(VAR x: Gen.Item);
 
+(*
+СписокИмпорт = IMPORT импорт {"," импорт} ";".
+импорт = идент [":=" идент].
+*)
+
 PROCEDURE Import;
+VAR ident1, ident2: ARRAY 32 OF CHAR;
 BEGIN
-  (* Здесь будет обработка IMPORT *)
+  IF sym = S.ident THEN
+    ident1 := S.id;
+    S.Get(sym);
+    IF sym = S.becomes THEN
+      S.Get(sym);
+      IF sym = S.ident THEN
+        ident2 := S.id;
+        S.Get(sym)
+      ELSE
+        S.Mark("Ожидается идентификатор")
+      END
+    ELSE
+      ident2 := ident1
+    END;
+    ST.Import(ident1, ident2)
+  ELSE
+    S.Mark("Ожидается идентификатор")
+  END
 END Import;
 
-PROCEDURE Type(VAR x: Gen.Item);
+PROCEDURE ImportList;
+BEGIN
+  IF sym = S.import THEN
+    S.Get(sym);
+    Import;
+    WHILE sym = S.comma DO
+      S.Get(sym);
+      Import
+    END;
+    IF sym = S.semicolon THEN
+      S.Get(sym)
+    ELSE
+      S.Mark("Ожидается точка с запятой")
+    END
+  END
+END ImportList;
+
+PROCEDURE Type(VAR tp: ST.Type);
 VAR o: ST.Object;
 BEGIN
   (*Тип по умолчанию, используется в случае ошибки*)
-  x.mode := ST.Typ;
-  x.type := ST.intType;
+  tp := ST.intType;
 
   IF sym = S.ident THEN
     o := ST.ThisObj();
@@ -25,7 +64,7 @@ BEGIN
     ELSIF o.class # ST.Typ THEN
       S.Mark("Это не тип")
     ELSE
-      x.type := o.type
+      tp := o.type
     END
   ELSE (*!TODO учесть ARRAY, RECORD и др.*)
     S.Mark("Ожидается тип")
@@ -46,7 +85,7 @@ END Type;
 Тип = Идентификатор. *)
 
 PROCEDURE Declarations(VAR varsize: INTEGER);
-VAR x: Gen.Item;
+VAR tp: ST.Type;
     i, n: INTEGER;
     o: ST.Object;
     names: ARRAY 30, 32 OF CHAR;
@@ -73,10 +112,10 @@ BEGIN
       END;
       IF sym = S.colon THEN
         S.Get(sym);
-        Type(x);
+        Type(tp);
         FOR i := 0 TO n - 1 DO
           o := ST.NewObj(names[i], ST.Var);
-          o.type := x.type;
+          o.type := tp;
           o.val := varsize;
           INC(varsize, 4);(*!TODO учитывать размер типа и выравнивание*)
           Out.String("Объявлена переменная "); Out.String(names[i]);
@@ -295,7 +334,12 @@ BEGIN
   UNTIL sym # S.semicolon
 END Statements;
 
-(* Модуль = MODULE идент ";" Объявления [BEGIN Операторы] END идент ".". *)
+(*
+Модуль = MODULE идент ";" [СписокИмпорт] Объявления
+[BEGIN Операторы] END идент ".". 
+СписокИмпорт = IMPORT импорт {"," импорт} ";".
+импорт = идент [":=" идент].
+*)
 PROCEDURE Module;
 VAR name: ARRAY 32 OF CHAR;
 BEGIN
@@ -307,7 +351,7 @@ BEGIN
     IF sym = S.semicolon THEN S.Get(sym)
     ELSE S.Mark("Ожидается точка с запятой")
     END;
-    Import;
+    ImportList;
     dc := 80002000;
     Declarations(dc);
     IF sym = S.begin THEN S.Get(sym); Statements END;
