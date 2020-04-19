@@ -3,7 +3,7 @@ IMPORT ST := SymTable, Out, Files, Chmod;
 CONST fname = "Test";
 TYPE
   Item* = RECORD
-    mode*: INTEGER; (* Режим предмета, используются константы из SymTable *)
+    mode*: INTEGER; (*Режим предмета, используются константы из SymTable*)
     type*: ST.Type;
     val*: INTEGER
   END;
@@ -127,5 +127,18 @@ BEGIN
     Out.String(fname); Out.Ln
   END
 END WriteDummy;
+
+PROCEDURE MakeItem*(VAR x: Item; o: ST.Object);
+BEGIN
+  x.mode := o.class;
+  x.type := o.type;
+  x.val := o.val
+END MakeItem;
+
+PROCEDURE Call*(VAR x: Item);
+BEGIN
+  Out.String("Вызвана процедура ");
+  Out.Int(x.val, 0); Out.Ln
+END Call;
 
 END Generator.

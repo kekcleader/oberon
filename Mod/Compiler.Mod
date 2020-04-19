@@ -13,7 +13,6 @@ BEGIN
     Out.String("Файл '"); Out.String(filename); Out.String("' не найден.")
   ELSE
     S.Init(F);
-    ST.Init;
     IF P.Compile() THEN Out.String("Компиляция прошла успешно.")
     ELSE Out.String("В ходе компиляции возникли ошибки.")
     END;

@@ -2,6 +2,7 @@ MODULE Parser;
 IMPORT Out, Files, S := Scanner, ST := SymTable, Gen := Generator;
 VAR sym: INTEGER;
   dc: INTEGER; (*Счётчик данных (data counter)*)
+  dummy: ST.Object; (*Болванка, см. QualIdent*)
 
 PROCEDURE ^Expression(VAR x: Gen.Item);
 
@@ -291,26 +292,61 @@ BEGIN
   END
 END Assignment;
 
-(*Designator - обозначение.
-Обозначение = уточнИдент {селектор}.
-уточнИдент = [идент "."] идент.
-селектор = "[" выражение "]" | ...
-Но здесь упрощено: Обозначение = идент.*)
-PROCEDURE Designator(VAR x: Gen.Item);
-VAR o: ST.Object;
+(*уточнИдент = [идент "."] идент.
+Первый идент - это модуль. *)
+PROCEDURE QualIdent(VAR o: ST.Object);
 BEGIN
-  x.mode := ST.Var;
   o := ST.ThisObj();
   S.Get(sym);
   IF o = NIL THEN
-    S.Mark("Нет такой переменной")
-  ELSIF o.class # ST.Var THEN
-    S.Mark("Это не переменная")
-  ELSE
-    x.type := o.type;
-    x.val := o.val
-  END
+    S.Mark("Нет такого объекта")
+  ELSE (*Объект найден...*)
+    IF (sym = S.period) & (o.class = ST.Mod) THEN (*...и это модуль*)
+      S.Get(sym);
+      o := ST.ThisObjInModule(o);
+      S.Get(sym);
+      IF o = NIL THEN S.Mark("В модуле нет такого объекта") END
+    END
+  END;
+  IF o = NIL THEN o := dummy END
+END QualIdent;
+
+(*Designator - обозначение.
+Обозначение = уточнИдент {селектор}.
+селектор = "[" выражение "]" | ...
+Но здесь упрощено: Обозначение = уточнИдент.*)
+PROCEDURE Designator(VAR o: ST.Object);
+BEGIN
+  QualIdent(o) (*!TODO обработать селекторы*)
 END Designator;
+
+(*ФактическиеПараметры = "(" [выражение {"," выражение}] ")".
+Предусловие: sym = S.lparen. Обрабатывает до ")" включительно.*)
+PROCEDURE ActualParameters(VAR x: Gen.Item);
+VAR y: Gen.Item;
+BEGIN
+  S.Get(sym);
+  IF sym # S.rparen THEN
+    Expression(y);
+    (*!TODO проверить совместимость типов параметров, исп. x.type.dsc*)
+    Out.String("Параметр "); Out.Int(y.val, 0); Out.Char("."); Out.Ln;
+    WHILE sym = S.comma DO
+      S.Get(sym);
+      Expression(y);
+      (*!TODO проверить совместимость типов параметров*)
+      Out.String("Параметр "); Out.Int(y.val, 0); Out.Char("."); Out.Ln
+    END;
+    (*!TODO проверить совпадение количества параметров*)
+    IF sym = S.rparen THEN S.Get(sym)
+    ELSE S.Mark("Не закрыта скобка")
+    END
+  ELSE (*Сразу после открывающей скобки идёт закрывающая*)
+    IF x.type.nofpar > 0 THEN
+      S.Mark("Недостаточно фактических параметров")
+    END;
+    S.Get(sym)
+  END
+END ActualParameters;
 
 (*Операторы = Оператор {";" Оператор}.
 Оператор = [Присваивание | ВызовПроцедуры | ОператорIf |
@@ -318,29 +354,31 @@ END Designator;
 Statements/Операторы означает последовательность операторов.*)
 PROCEDURE Statements;
 VAR x: Gen.Item;
+  o: ST.Object;
 BEGIN
   REPEAT
     WHILE sym = S.semicolon DO S.Get(sym) END;
-    IF sym = S.ident THEN Designator(x);
+    IF sym = S.ident THEN
+      Designator(o);
+      Gen.MakeItem(x, o);
       IF sym = S.eql THEN sym := S.becomes; S.Mark("Ожидается :=") END;
       IF sym = S.becomes THEN Assignment(x)
-      ELSIF sym = S.lparen THEN
-        S.Get(sym);
-        IF x.type.form = ST.Proc THEN
-          IF x.type.base.form # ST.NoTyp THEN
+      ELSIF sym = S.lparen THEN (*Например: Out.Int(... *)
+        IF x.type.form = ST.Proc THEN (*Это действительно процедура*)
+          IF x.type.base.form # ST.NoTyp THEN (*Функциональная*)
             S.Mark("Не используется возвращаемое значение")
           ELSE
-            ParamList(x); (* обработает до ) включительно *)
-            Out.String("Вызвана какая-то процедура"); Out.Ln
+            ActualParameters(x); (*Обрабатывает до ")" включительно*)
+            Gen.Call(x)
           END
         ELSE S.Mark("Это не процедура")
         END
-      ELSIF x.type.form = ST.Proc THEN
+      ELSIF x.type.form = ST.Proc THEN(*Вызов процедуры без параметров*)
         IF x.type.nofpar > 0 THEN S.Mark("Требуются параметры") END;
-        IF x.type.base.form # ST.NoTyp THEN
+        IF x.type.base.form # ST.NoTyp THEN (*Функциональная*)
           S.Mark("Не используется возвращаемое значение")
         ELSE
-          Out.String("Вызвана какая-то процедура"); Out.Ln
+          Gen.Call(x)
         END
       ELSE S.Mark("Инструкция неопознана")
       END
@@ -380,12 +418,19 @@ BEGIN
   END
 END Module;
 
+PROCEDURE Init;
+BEGIN
+  ST.Init;
+  NEW(dummy); dummy.class := ST.Var; dummy.type := ST.intType
+END Init;
+
 (*Разбирает лексемы, получаемые из модуля Scanner, в соответствии
 с синтаксисом языка Оберон. Возвращает TRUE в случае
 успешной компиляции. Вызывается из модуля Compiler.
 В будущем будет вызывать кодогенератор (из отдельного модуля). *)
 PROCEDURE Compile*(): BOOLEAN;
 BEGIN
+  Init;
   Gen.WriteDummy; (*Сгенерировать исполнимый файл. Хардкод.*)
   S.Get(sym); (* олучить наперёд одну лексему*)
   Module; (*Запустить разбор синтаксической структуры МОДУЛЬ*)

@@ -77,6 +77,14 @@ BEGIN
   RETURN o
 END NewObj;
 
+PROCEDURE ThisObjInModule*(mod: Object): Object;
+VAR o: Object;
+BEGIN
+  o := mod.dsc;
+  WHILE (o # NIL) & (o.name # S.id) DO o := o.next END;
+  RETURN o
+END ThisObjInModule;
+
 (*Предусловие: sym = S.ident*)
 PROCEDURE ThisObj*(): Object;
 VAR o, p: Object;
@@ -103,7 +111,7 @@ BEGIN
     curScope.next := m;
     m.class := Mod;
     m.name := alias;
-    m.val := 1; (* FIXIKI *)
+    m.val := 1; (*!FIXME*)
     m.type := NIL;
     m.dsc := NIL;
 
