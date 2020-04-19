@@ -2,19 +2,25 @@ MODULE SymTable;
 IMPORT Out, S := Scanner;
 CONST
   (* Классы объектов (и одновременно режимы предметов) *)
-  Head* = 0; Const* = 1; Var* = 2; Typ* = 5;
+  Head* = 0; Const* = 1; Var* = 2; Typ* = 5; Mod* = 8;
 
   (* Формы типов *)
   Char* = 3;
   Int* = 4;
+  NoTyp* = 9;
+  Proc* = 10;
 
 TYPE
+  Object* = POINTER TO ObjDesc;
   Type* = POINTER TO TypeDesc;
   TypeDesc* = RECORD
-    form*: INTEGER (* Форма типа *)
+    form*: INTEGER; (* Форма типа *)
+    size*: INTEGER; (* Размер типа в байтах *)
+    nofpar*: INTEGER; (* Количество параметров *)
+    base*: Type; (* Тип возвращаемого значения процедуры *) 
+    dsc*: Object (* Список формальных параметров процедуры *)
   END;
 
-  Object* = POINTER TO ObjDesc;
   ObjDesc* = RECORD
     class*: INTEGER; (* Класс объекта *)
     type*: Type;
@@ -33,7 +39,7 @@ Type  | не используется (пока)   *)
 VAR
   curScope: Object;
 
-  charType*, intType*: Type;
+  charType*, intType*, noType*: Type;
 
 (*Для удобочитаемой отладки*)
 PROCEDURE OutType*(t: Type);
@@ -44,11 +50,12 @@ BEGIN
   END
 END OutType;
 
-PROCEDURE MakeType(form: INTEGER): Type;
+PROCEDURE MakeType(form, size: INTEGER): Type;
 VAR t: Type;
 BEGIN
   NEW(t);
   t.form := form;
+  t.size := size;
   RETURN t
 END MakeType;
 
@@ -88,8 +95,42 @@ BEGIN
 END ThisObj;
 
 PROCEDURE Import*(alias, modname: ARRAY OF CHAR);
+VAR m, o, p: Object;
+  tp: Type;
 BEGIN
-  Out.String("Импортируем "); Out.String(modname);
+  IF modname = "Out" THEN
+    NEW(m);
+    curScope.next := m;
+    m.class := Mod;
+    m.name := alias;
+    m.val := 1; (* FIXIKI *)
+    m.type := NIL;
+    m.dsc := NIL;
+    
+    NEW(o);
+    m.dsc := o;
+    o.class := Const;
+    o.name := "Char";
+    o.val := 0;
+    o.next := NIL;
+    o.dsc := NIL;
+    tp := MakeType(Proc, 4);
+    o.type := tp;
+    tp.nofpar := 1;
+    tp.base := noType;
+    
+    NEW(p);
+    tp.dsc := p;
+    p.class := Var;
+    p.name := "ch";
+    p.val := 4;
+    p.type := charType;
+    p.next := NIL;
+    p.dsc := NIL;
+  ELSE
+    S.Mark("Такого модуля не существует")
+  END;
+  Out.String("Импортируем "); Out.String(modname); 
   Out.String(" под псевдонимом "); Out.String(alias);
   Out.Char("."); Out.Ln
 END Import;
@@ -112,7 +153,7 @@ BEGIN
   o.name := "CHAR";
   o.next := NIL;
   o.dsc := NIL;
-  charType := MakeType(Char);
+  charType := MakeType(Char, 1);
   o.type := charType;
   curScope.dsc.next := o;
 
@@ -121,9 +162,11 @@ BEGIN
   o.name := "INTEGER";
   o.next := NIL;
   o.dsc := NIL;
-  intType := MakeType(Int);
+  intType := MakeType(Int, 4);
   o.type := intType;
-  curScope.dsc.next.next := o
+  curScope.dsc.next.next := o;
+
+  noType := MakeType(NoTyp, 4)
 END Init;
 
 PROCEDURE Display*;
