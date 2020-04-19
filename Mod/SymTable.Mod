@@ -17,7 +17,7 @@ TYPE
     form*: INTEGER; (* Форма типа *)
     size*: INTEGER; (* Размер типа в байтах *)
     nofpar*: INTEGER; (* Количество параметров *)
-    base*: Type; (* Тип возвращаемого значения процедуры *) 
+    base*: Type; (* Тип возвращаемого значения процедуры *)
     dsc*: Object (* Список формальных параметров процедуры *)
   END;
 
@@ -106,7 +106,7 @@ BEGIN
     m.val := 1; (* FIXIKI *)
     m.type := NIL;
     m.dsc := NIL;
-    
+
     NEW(o);
     m.dsc := o;
     o.class := Const;
@@ -118,7 +118,7 @@ BEGIN
     o.type := tp;
     tp.nofpar := 1;
     tp.base := noType;
-    
+
     NEW(p);
     tp.dsc := p;
     p.class := Var;
@@ -130,7 +130,7 @@ BEGIN
   ELSE
     S.Mark("Такого модуля не существует")
   END;
-  Out.String("Импортируем "); Out.String(modname); 
+  Out.String("Импортируем "); Out.String(modname);
   Out.String(" под псевдонимом "); Out.String(alias);
   Out.Char("."); Out.Ln
 END Import;
