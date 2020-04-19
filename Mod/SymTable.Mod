@@ -182,6 +182,7 @@ BEGIN
       ELSIF p.class = Var THEN
         Out.String("переменная типа "); OutType(p.type)
       ELSIF p.class = Typ THEN Out.String("тип")
+      ELSIF p.class = Mod THEN Out.String("модуль")
       END;
       Out.Ln;
       p := p.next

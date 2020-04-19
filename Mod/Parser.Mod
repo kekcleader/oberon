@@ -8,7 +8,7 @@ PROCEDURE ^Expression(VAR x: Gen.Item);
 (*импорт = идент [":=" идент].*)
 PROCEDURE Import;
 VAR ident1, ident2: ARRAY 32 OF CHAR;
-BEGIN
+BEGINs
   IF sym = S.ident THEN
     ident1 := S.id;
     S.Get(sym);
@@ -324,7 +324,25 @@ BEGIN
     IF sym = S.ident THEN Designator(x);
       IF sym = S.eql THEN sym := S.becomes; S.Mark("Ожидается :=") END;
       IF sym = S.becomes THEN Assignment(x)
-      ELSE S.Mark("Ожидается :=") (*!TODO обработать вызов процедуры*)
+      ELSIF sym = S.lparen THEN
+        S.Get(sym);
+        IF x.type.form = ST.Proc THEN
+          IF x.type.base.form # ST.NoTyp THEN
+            S.Mark("Не используется возвращаемое значение")
+          ELSE
+            ParamList(x); (* обработает до ) включительно *)
+            Out.String("Вызвана какая-то процедура"); Out.Ln
+          END
+        ELSE S.Mark("Это не процедура")
+        END
+      ELSIF x.type.form = ST.Proc THEN
+        IF x.type.nofpar > 0 THEN S.Mark("Требуются параметры") END;
+        IF x.type.base.form # ST.NoTyp THEN
+          S.Mark("Не используется возвращаемое значение")
+        ELSE
+          Out.String("Вызвана какая-то процедура"); Out.Ln
+        END
+      ELSE S.Mark("Инструкция неопознана")
       END
     END
   UNTIL sym # S.semicolon

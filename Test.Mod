@@ -6,4 +6,5 @@ BEGIN
   a := 4;
   n := 5;
   a := a * n;
+  O.Char("k");
 END Test.
