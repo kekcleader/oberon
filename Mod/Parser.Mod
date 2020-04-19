@@ -8,7 +8,7 @@ PROCEDURE ^Expression(VAR x: Gen.Item);
 (*импорт = идент [":=" идент].*)
 PROCEDURE Import;
 VAR ident1, ident2: ARRAY 32 OF CHAR;
-BEGINs
+BEGIN
   IF sym = S.ident THEN
     ident1 := S.id;
     S.Get(sym);
