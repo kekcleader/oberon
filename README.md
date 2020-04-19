@@ -33,3 +33,5 @@ make
 ```
 sudo apt-get install -y make gcc
 ```
+
+![Oberon compiler screenshot](https://github.com/kekcleader/oberon/raw/master/etc/docs/schemes/03_Import.png)
