@@ -1,5 +1,5 @@
 MODULE Test;
-IMPORT In, O := Out;
+IMPORT O := Out;
 VAR a, b, c, n: INTEGER;
   d, f: CHAR;
 BEGIN
