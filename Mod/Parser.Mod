@@ -320,31 +320,46 @@ BEGIN
   QualIdent(o) (*!TODO обработать селекторы*)
 END Designator;
 
+PROCEDURE Parameter(par: ST.Object);
+VAR x: Gen.Item;
+BEGIN
+  Expression(x);
+  IF x.type.form # par.type.form THEN
+    S.Mark("Несогласование типов")
+    (*!TODO вывести типы формального и фактического параметров*)
+  ELSE
+    Out.String("Параметр "); Out.Int(x.val, 0); Out.Char("."); Out.Ln
+  END
+END Parameter;
+
 (*ФактическиеПараметры = "(" [выражение {"," выражение}] ")".
 Предусловие: sym = S.lparen. Обрабатывает до ")" включительно.*)
 PROCEDURE ActualParameters(VAR x: Gen.Item);
 VAR y: Gen.Item;
+  par: ST.Object;
+  n: INTEGER; (*Фактическое количество параметров*)
 BEGIN
   S.Get(sym);
+  n := 0;
   IF sym # S.rparen THEN
-    Expression(y);
-    (*!TODO проверить совместимость типов параметров, исп. x.type.dsc*)
-    Out.String("Параметр "); Out.Int(y.val, 0); Out.Char("."); Out.Ln;
+    par := x.type.dsc;
+    Parameter(par);
+    INC(n);
     WHILE sym = S.comma DO
       S.Get(sym);
-      Expression(y);
-      (*!TODO проверить совместимость типов параметров*)
-      Out.String("Параметр "); Out.Int(y.val, 0); Out.Char("."); Out.Ln
-    END;
-    (*!TODO проверить совпадение количества параметров*)
-    IF sym = S.rparen THEN S.Get(sym)
-    ELSE S.Mark("Не закрыта скобка")
+      IF par # NIL THEN par := par.next END;
+      Parameter(par);
+      INC(n)
     END
-  ELSE (*Сразу после открывающей скобки идёт закрывающая*)
-    IF x.type.nofpar > 0 THEN
-      S.Mark("Недостаточно фактических параметров")
-    END;
-    S.Get(sym)
+  END;
+  IF sym = S.rparen THEN S.Get(sym)
+  ELSE S.Mark("Не закрыта скобка")
+  END;
+  (*Проверка совпадения количества параметров*)
+  IF n > x.type.nofpar THEN
+    S.Mark("Слишком много фактических параметров")
+  ELSIF n < x.type.nofpar THEN
+    S.Mark("Недостаточно фактических параметров")
   END
 END ActualParameters;
 

@@ -6,5 +6,5 @@ BEGIN
   a := 4;
   n := 5;
   a := a * n;
-  O.Char(364, "k", 42 * 24 + 1)
+  O.Char(46X)
 END Test.
