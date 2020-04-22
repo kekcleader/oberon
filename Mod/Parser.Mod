@@ -324,11 +324,13 @@ PROCEDURE Parameter(par: ST.Object);
 VAR x: Gen.Item;
 BEGIN
   Expression(x);
-  IF x.type.form # par.type.form THEN
-    S.Mark("Несогласование типов")
-    (*!TODO вывести типы формального и фактического параметров*)
-  ELSE
-    Out.String("Параметр "); Out.Int(x.val, 0); Out.Char("."); Out.Ln
+  IF par # NIL THEN
+    IF x.type.form # par.type.form THEN
+      S.Mark("Несогласование типов")
+      (*!TODO вывести типы формального и фактического параметров*)
+    ELSE
+      Out.String("Параметр "); Out.Int(x.val, 0); Out.Char("."); Out.Ln
+    END
   END
 END Parameter;
 

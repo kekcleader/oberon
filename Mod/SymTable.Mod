@@ -2,7 +2,8 @@ MODULE SymTable;
 IMPORT Out, S := Scanner;
 CONST
   (* Классы объектов (и одновременно режимы предметов) *)
-  Head* = 0; Const* = 1; Var* = 2; Typ* = 5; Mod* = 8;
+  Head* = 0; Const* = 1; Var* = 2; Par* = 3; Typ* = 5; Mod* = 8;
+          (*Par - это вар-параметр*)
 
   (* Формы типов *)
   Char* = 3;
@@ -102,6 +103,51 @@ BEGIN
   RETURN o
 END ThisObj;
 
+(*Добавить процедуру в модуль*)
+PROCEDURE AddProc(m: Object; name: ARRAY OF CHAR; key: INTEGER): Object;
+VAR o, g: Object;
+BEGIN
+  NEW(o);
+  IF m.dsc = NIL THEN
+    m.dsc := o
+  ELSE
+    g := m.dsc;
+    WHILE g.next # NIL DO g := g.next END;
+    g.next := o
+  END;
+  o.class := Const;
+  o.name := name;
+  o.val := key;
+  o.next := NIL;
+  o.dsc := NIL;
+  o.type := MakeType(Proc, 4);
+  o.type.nofpar := 0;
+  o.type.base := noType;
+  RETURN o
+END AddProc;
+
+(*Добавить формальный параметр в процедуру*)
+PROCEDURE AddParam(proc: Object; name: ARRAY OF CHAR; varParam: BOOLEAN;
+    type: Type; offset: INTEGER);
+VAR o, p: Object;
+BEGIN
+  NEW(p);
+  IF proc.type.dsc = NIL THEN
+    proc.type.dsc := p
+  ELSE
+    o := proc.type.dsc;
+    WHILE o.next # NIL DO o := o.next END;
+    o.next := p
+  END;
+  INC(proc.type.nofpar);
+  IF varParam THEN p.class := Par ELSE p.class := Var END;
+  p.name := name;
+  p.val := offset; (*?*)
+  p.type := type;
+  p.next := NIL;
+  p.dsc := NIL
+END AddParam;
+
 PROCEDURE Import*(alias, modname: ARRAY OF CHAR);
 VAR m, o, p: Object;
   tp: Type;
@@ -114,27 +160,27 @@ BEGIN
     m.val := 1; (*!FIXME*)
     m.type := NIL;
     m.dsc := NIL;
-
-    NEW(o);
-    m.dsc := o;
-    o.class := Const;
-    o.name := "Char";
-    o.val := 0;
-    o.next := NIL;
-    o.dsc := NIL;
-    tp := MakeType(Proc, 4);
-    o.type := tp;
-    tp.nofpar := 1;
-    tp.base := noType;
-
-    NEW(p);
-    tp.dsc := p;
-    p.class := Var;
-    p.name := "ch";
-    p.val := 4;
-    p.type := charType;
-    p.next := NIL;
-    p.dsc := NIL;
+    (*Out.Char*)
+    o := AddProc(m, "Char", 0);
+    AddParam(o, "ch", FALSE, charType, 4);
+    (*Out.Int*)
+    o := AddProc(m, "Int", 1);
+    AddParam(o, "n", FALSE, intType, 4);
+    AddParam(o, "w", FALSE, intType, 8);
+    (*Out.Ln*)
+    o := AddProc(m, "Ln", 2)
+  ELSIF modname = "In" THEN
+    NEW(m);
+    m.next := curScope.next;
+    curScope.next := m;
+    m.class := Mod;
+    m.name := alias;
+    m.val := 2; (*!FIXME*)
+    m.type := NIL;
+    m.dsc := NIL;
+    (*In.Int*)
+    o := AddProc(m, "Int", 0);
+    AddParam(o, "n", TRUE, intType, 4)
   ELSE
     S.Mark("Такого модуля не существует")
   END;
