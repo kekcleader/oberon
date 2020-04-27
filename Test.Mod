@@ -1,13 +1,22 @@
 MODULE Test;
-IMPORT O := Out, In;
-VAR a, b, c, n: INTEGER;
-  d, f: CHAR;
+IMPORT Out;
+VAR c: CHAR;
 BEGIN
-  a := 4;
-  n := 5;
-  a := a * n;
-  In.Int(n);
-  O.Char(46X);
-  O.Int(351, 0);
-  O.Ln
+  a := a + b;
+  c := "!";
+  Out.Char("H");
+  Out.Char("i");
+  Out.Char(c);
+  Out.Ln
 END Test.
+
+(*Пример*)
+SUM EAX, EBX
+
+MOV [0x80002000], DWORD 70 (* c := "F" *)
+
+MOV EAX, [0x80002000]      (* (c) *)
+PUSH EAX
+
+CALL 0x80004000            (* Out.Char *)
+CALL 0x80004100            (* Out.Ln *)
