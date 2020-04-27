@@ -328,6 +328,8 @@ BEGIN
     IF x.type.form # par.type.form THEN
       S.Mark("Несогласование типов")
       (*!TODO вывести типы формального и фактического параметров*)
+    ELSIF (par.class = ST.Par) & (x.mode # ST.Var) THEN
+      S.Mark("Требуется вар-параметр")
     ELSE
       Out.String("Параметр "); Out.Int(x.val, 0); Out.Char("."); Out.Ln
     END
@@ -341,14 +343,14 @@ VAR y: Gen.Item;
   par: ST.Object;
   n: INTEGER; (*Фактическое количество параметров*)
 BEGIN
-  S.Get(sym);
+  S.Get(sym);(*Пропускаем "("*)
   n := 0;
   IF sym # S.rparen THEN
     par := x.type.dsc;
     Parameter(par);
     INC(n);
     WHILE sym = S.comma DO
-      S.Get(sym);
+      S.Get(sym); (*Пропускаем ","*)
       IF par # NIL THEN par := par.next END;
       Parameter(par);
       INC(n)

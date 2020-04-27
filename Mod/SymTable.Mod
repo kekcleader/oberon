@@ -160,10 +160,10 @@ BEGIN
     m.val := 1; (*!FIXME*)
     m.type := NIL;
     m.dsc := NIL;
-    (*Out.Char*)
+    (*Out.Char(ch)*)
     o := AddProc(m, "Char", 0);
     AddParam(o, "ch", FALSE, charType, 4);
-    (*Out.Int*)
+    (*Out.Int(n, w)*)
     o := AddProc(m, "Int", 1);
     AddParam(o, "n", FALSE, intType, 4);
     AddParam(o, "w", FALSE, intType, 8);
@@ -178,7 +178,7 @@ BEGIN
     m.val := 2; (*!FIXME*)
     m.type := NIL;
     m.dsc := NIL;
-    (*In.Int*)
+    (*In.Int(n)*)
     o := AddProc(m, "Int", 0);
     AddParam(o, "n", TRUE, intType, 4)
   ELSE
